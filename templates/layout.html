@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="apple-touch-icon" sizes="76x76" href="{{ url_for('static', filename='assets/img/apple-icon.png') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon.png') }}">
+  <title>
+    Metrica Web - {% block title %}Dashboard{% endblock %}
+  </title>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Noto+Sans:300,400,500,600,700,800|PT+Mono:300,400,500,600,700" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='assets/css/nucleo-icons.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='assets/css/nucleo-svg.css') }}" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/349ee9c857.js" crossorigin="anonymous"></script>
+  <link href="{{ url_for('static', filename='assets/css/nucleo-svg.css') }}" rel="stylesheet" />
+  <link id="pagestyle" href="{{ url_for('static', filename='assets/css/corporate-ui-dashboard.css') }}" rel="stylesheet" />
+</head>
+
+<body class="g-sidenav-show  bg-gray-100" data-current-user="{{ session.usuario.nombre_completo if session.usuario else '' }}">
+  <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 bg-slate-900 fixed-start " id="sidenav-main">
+    <div class="sidenav-header">
+      <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
+      <a class="navbar-brand d-flex align-items-center m-0" href="{{ url_for('dashboard_general') }}">
+        <span class="font-weight-bold text-lg">Métrica Web</span>
+      </a>
+    </div>
+    <div class="collapse navbar-collapse px-4  w-auto " id="sidenav-collapse-main">
+      <ul class="navbar-nav">
+        
+        <li class="nav-item mt-2">
+            <div class="d-flex align-items-center nav-link">
+              <i class="fas fa-gavel text-white me-2"></i>
+              <span class="font-weight-normal text-md ms-2 text-white">Dep.Licitaciones</span>
+            </div>
+        </li>
+        <li class="nav-item border-start my-0 pt-2">
+          <a class="nav-link position-relative ms-0 ps-2 py-2 {% if 'dashboard_general' in request.path %}active{% endif %}" href="{{ url_for('dashboard_general') }}">
+            <span class="nav-link-text ms-1">Dashboard General</span>
+          </a>
+        </li>
+        <li class="nav-item border-start my-0">
+          <a class="nav-link position-relative ms-0 ps-2 py-2 {% if 'compras_agiles' in request.path %}active{% endif %}" href="{{ url_for('compras_agiles') }}">
+            <span class="nav-link-text ms-1">Compras Ágiles</span>
+          </a>
+        </li>
+        <li class="nav-item border-start my-0">
+          <a class="nav-link position-relative ms-0 ps-2 py-2 {% if 'licitaciones_analisis' in request.path %}active{% endif %}" href="{{ url_for('licitaciones_analisis') }}">
+            <span class="nav-link-text ms-1">Análisis Licitaciones</span>
+          </a>
+        </li>
+        <li class="nav-item border-start my-0">
+          <a class="nav-link position-relative ms-0 ps-2 py-2 {% if 'licitaciones_vigentes' in request.path %}active{% endif %}" href="{{ url_for('licitaciones_vigentes') }}">
+            <span class="nav-link-text ms-1">Licitaciones Vigentes</span>
+          </a>
+        </li>
+
+        <li class="nav-item mt-3">
+            <a class="nav-link disabled" href="#">
+              <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
+                <i class="fas fa-cogs text-white opacity-60"></i>
+              </div>
+              <span class="nav-link-text ms-1 opacity-60">Departamento de Operaciones</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link disabled" href="#">
+              <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
+                <i class="fas fa-dollar-sign text-white opacity-60"></i>
+              </div>
+              <span class="nav-link-text ms-1 opacity-60">Departamento de Finanzas</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link disabled" href="#">
+              <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
+                <i class="fas fa-users text-white opacity-60"></i>
+              </div>
+              <span class="nav-link-text ms-1 opacity-60">Recursos Humanos</span>
+            </a>
+        </li>
+
+        <li class="nav-item mt-3">
+            <div class="d-flex align-items-center nav-link">
+              <i class="fas fa-tools text-white me-2"></i>
+              <span class="font-weight-normal text-md ms-2 text-white">Administración</span>
+            </div>
+        </li>
+        <li class="nav-item border-start my-0 pt-2">
+            <a class="nav-link position-relative ms-0 ps-2 py-2 {% if 'configuracion' in request.path %}active{% endif %}" href="{{ url_for('configuracion') }}">
+              <span class="nav-link-text ms-1">Configuración</span>
+            </a>
+        </li>
+        <li class="nav-item border-start my-0">
+            <a class="nav-link position-relative ms-0 ps-2 py-2 {% if 'cargar_datos' in request.path %}active{% endif %}" href="{{ url_for('cargar_datos') }}">
+              <span class="nav-link-text ms-1">Cargar Datos</span>
+            </a>
+        </li>
+      </ul>
+    </div>
+  </aside>
+
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    <nav class="navbar navbar-main navbar-expand-lg mx-5 px-0 shadow-none rounded" id="navbarBlur" navbar-scroll="true">
+      <div class="container-fluid py-1 px-2">
+        <nav aria-label="breadcrumb">
+          <h6 class="font-weight-bold mb-0" id="page-title-display">{% block page_title %}Dashboard{% endblock %}</h6>
+        </nav>
+        <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+          <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+          </div>
+          <ul class="navbar-nav  justify-content-end">
+            <li class="nav-item ps-2 d-flex align-items-center">
+                <a href="{{ url_for('logout') }}" class="nav-link text-body p-0">
+                    {% if session.get('usuario') %}
+                        <span class="d-sm-inline d-none">{{ session.usuario.nombre_completo }} (Cerrar Sesión)</span>
+                    {% else %}
+                        <span class="d-sm-inline d-none">Sign Out</span>
+                    {% endif %}
+                </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container-fluid py-4 px-5">
+      
+      <div id="sse-notification" class="alert alert-info text-white alert-dismissible fade" role="alert" style="display: none;">
+          <span id="sse-message"></span>
+          <button id="sse-reload-btn" class="btn btn-sm btn-light mb-0 ms-3">Recargar Página</button>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+          </button>
+      </div>
+
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'primary' if category == 'success' else category }} text-white" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      
+      <footer class="footer pt-3  ">
+        <div class="container-fluid">
+          <div class="row align-items-center justify-content-lg-between">
+            <div class="col-lg-6 mb-lg-0 mb-4">
+              <div class="copyright text-center text-xs text-muted text-lg-start">
+                Copyright © <script> document.write(new Date().getFullYear()) </script> Metrica Web
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <ul class="nav nav-footer justify-content-center justify-content-lg-end">
+              </ul>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='assets/js/core/popper.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/core/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/plugins/chartjs.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/plugins/swiper-bundle.min.js') }}" type="text/javascript"></script>
+
+  <script src="{{ url_for('static', filename='assets/js/corporate-ui-dashboard.min.js') }}"></script>
+
+  {% block scripts %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUser = document.body.dataset.currentUser;
+        const pageTitleElement = document.getElementById('page-title-display');
+        const currentPage = pageTitleElement ? pageTitleElement.innerText.trim() : '';
+        
+        const notificationBanner = document.getElementById('sse-notification');
+        const notificationMessage = document.getElementById('sse-message');
+        const reloadButton = document.getElementById('sse-reload-btn');
+
+        // Conectar al stream de eventos del servidor
+        const eventSource = new EventSource("{{ url_for('stream') }}");
+
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            // No mostrar notificaciones de las propias acciones
+            if (data.user === currentUser) {
+                return;
+            }
+
+            // Comprobar si el usuario está en la misma página que la actualización
+            if (data.page === currentPage) {
+                notificationMessage.innerHTML = `<strong>¡Atención!</strong> ${data.user} ha cargado nuevos datos en esta página. ¿Deseas recargar para ver los cambios?`;
+                reloadButton.style.display = 'inline-block';
+            } else {
+                notificationMessage.innerHTML = `<strong>Aviso:</strong> ${data.user} ha actualizado datos en la sección <strong>'${data.page}'</strong>.`;
+                reloadButton.style.display = 'none'; // No se necesita recargar si es otra página
+            }
+
+            // Mostrar el banner
+            notificationBanner.style.display = 'block';
+            notificationBanner.classList.add('show');
+        };
+
+        // Event listener para el botón de recargar
+        reloadButton.addEventListener('click', function() {
+            location.reload();
+        });
+
+        eventSource.onerror = function(err) {
+            console.error("EventSource falló:", err);
+            eventSource.close();
+        };
+    });
+  </script>
+  {% endblock %}
+
+</body>
+</html>

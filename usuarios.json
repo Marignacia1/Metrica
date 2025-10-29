@@ -1,0 +1,48 @@
+{
+  "usuarios": {
+    "D": {
+      "password": "visualizadore2025",
+      "rol": "jefe",
+      "nombre_completo": "Danilo (Visualizador)"
+    },
+    "admin": {
+      "password": "admin2025",
+      "rol": "operador",
+      "nombre_completo": "Maria"
+    },
+    "johana": {
+      "password": "johana2025",
+      "rol": "jefe",
+      "nombre_completo": "Johana"
+    }
+  },
+  "roles_permisos": {
+    "operador": {
+      "ver_datos": true,
+      "modificar_analisis": true,
+      "cargar_archivos": true,
+      "generar_informes": true,
+      "ver_notificaciones": true,
+      "ver_menu_admin": true,
+      "descripcion": "Acceso completo al sistema"
+    },
+    "operador_limitado": {
+      "ver_datos": true,
+      "modificar_analisis": false,
+      "cargar_archivos": true,
+      "generar_informes": true,
+      "ver_notificaciones": true,
+      "ver_menu_admin": false,
+      "descripcion": "Puede ver datos y cargar archivos, pero no modificar datos sensibles"
+    },
+    "jefe": {
+      "ver_datos": true,
+      "modificar_analisis": false,
+      "cargar_archivos": false,
+      "generar_informes": true,
+      "ver_notificaciones": false,
+      "ver_menu_admin": false,
+      "descripcion": "Solo visualización de dashboards y descarga de informes"
+    }
+  }
+}

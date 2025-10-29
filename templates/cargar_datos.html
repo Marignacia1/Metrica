@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block title %}Cargar Nuevos Datos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>🚀 Cargar Nuevos Datos</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="experto" class="form-label">📋 Experto Bruto (Requerido)</label>
+                        <input class="form-control" type="file" id="experto" name="experto" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cancelados" class="form-label">❌ Cancelados-Experto (Requerido)</label>
+                        <input class="form-control" type="file" id="cancelados" name="cancelados" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="precompra" class="form-label">🔄 Informe Precompra (Opcional)</label>
+                        <input class="form-control" type="file" id="precompra" name="precompra">
+                    </div>
+                    <hr>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Procesar Archivos</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
