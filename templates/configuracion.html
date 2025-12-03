@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}Configuración{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="mb-4">⚙️ Configuración del Sistema</h1>
+
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4>Zona de Peligro</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Eliminar la Base de Datos</h5>
+                <p class="card-text">
+                    Esta acción es irreversible y eliminará permanentemente todos los datos históricos de la aplicación, incluyendo sesiones, requerimientos procesados y licitaciones guardadas.
+                </p>
+                <p><strong>Solo utiliza esta opción si deseas empezar desde cero.</strong></p>
+                
+                <form method="POST" onsubmit="return confirm('ADVERTENCIA: ¿Estás completamente seguro de que quieres borrar toda la base de datos? Esta acción no se puede deshacer.');">
+                    <button type="submit" class="btn btn-danger">🗑️ Sí, eliminar toda la base de datos</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

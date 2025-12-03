@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}Recuperar Contraseña{% endblock %}
+{% block page_title %}Recuperar Contraseña{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-6 col-md-8">
+        <div class="card border shadow-xs">
+            <div class="card-header border-bottom pb-0">
+                <h6 class="font-weight-semibold text-lg mb-0">¿Olvidaste tu contraseña?</h6>
+                <p class="text-sm mb-3">Ingresa tu correo electrónico y te enviaremos un enlace para recuperarla.</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('solicitar_recuperacion') }}">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary btn-sm mb-0">Enviar Enlace</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

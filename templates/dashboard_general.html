@@ -1,0 +1,540 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard General{% endblock %}
+{% block page_title %}Dashboard General{% endblock %}
+{% if session.usuario.permisos.cargar_archivos %}
+    <div class="card shadow mb-4">
+        <div class="card-header">Análisis de Resultados</div>
+        <div class="card-body">
+             <form method="POST" enctype="multipart/form-data">
+                 </form>
+        </div>
+    </div>
+{% endif %}
+{% block content %}
+<style>
+  .table-compact th,
+  .table-compact td {
+    padding: 0.4rem 0.75rem !important;
+  }
+  .table-compact h6 {
+    font-size: 0.875rem;
+    margin-bottom: 0;
+  }
+  
+  #collapseUnmatched .accordion-body,
+  #collapseUnmatched .list-group-item {
+    color: #344767 !important; /* Color de texto oscuro del tema */
+  }
+
+  /* --- INICIO DE ALINEACIÓN AL CENTRO --- */
+  /* Centra Títulos (th) y Datos (td) en las tablas de resumen */
+  #tabla-resumen-unidades th,
+  #tabla-resumen-unidades td,
+  #tabla-resumen-estados th,
+  #tabla-resumen-estados td,
+  /* CORRECCIÓN 1: Se añade la ID de la tabla de distribución para centrarla */
+  #tabla-distribucion-tipo th,
+  #tabla-distribucion-tipo td {
+    text-align: center !important;
+    vertical-align: middle;
+  }
+  /* --- FIN DE ALINEACIÓN --- */
+
+
+  /* --- INICIO DE CORRECCIÓN DE ACORDEONES Y FILTROS --- */
+  
+  /* Apunta a tablas en acordeones Y en el div de resultados */
+  .accordion-body .table th,
+  .accordion-body .table td,
+  #resultados-filtro .table th, /* <-- ESTA LÍNEA ES NUEVA */
+  #resultados-filtro .table td { /* <-- ESTA LÍNEA ES NUEVA */
+      white-space: normal !important; /* Permite que el texto se divida en líneas */
+      word-wrap: break-word;       /* Rompe palabras largas */
+      vertical-align: middle;      /* Mantiene el texto alineado al medio */
+      text-align: left !important;
+  }
+
+  /* Controla la columna 'titulo' (la 2da en acordeones) */
+  .accordion-body .table th:nth-child(2),
+  .accordion-body .table td:nth-child(2) {
+      max-width: 400px; /* Ancho máximo para el título */
+      min-width: 250px;
+  }
+  
+  /* Controla la columna 'Nombre_oc' (la 1ra en el filtro) */
+  #resultados-filtro .table th:nth-child(1), /* <-- ESTA LÍNEA ES NUEVA */
+  #resultados-filtro .table td:nth-child(1) { /* <-- ESTA LÍNEA ES NUEVA */
+      max-width: 400px; 
+      min-width: 250px;
+  }
+  /* --- FIN DE CORRECCIÓN --- */
+</style>
+ 
+{% if kpis %}
+<div class="row">
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100">
+            <div class="card-body text-center p-3 w-100">
+                <div class="icon icon-shape icon-lg bg-info text-white text-center border-radius-sm d-flex align-items-center justify-content-center mx-auto mb-3">
+                    <i class="ri-inbox-line text-lg opacity-10"></i>
+                </div>
+                <p class="text-sm text-secondary mb-1">Total Req Ingresados</p>
+                <h4 class="mb-2 font-weight-bold">{{ kpis.get('total_brutos', 0) }}</h4>
+                <span class="text-xs text-secondary">Inicial</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100">
+            <div class="card-body text-center p-3 w-100">
+                <div class="icon icon-shape icon-lg bg-danger text-white text-center border-radius-sm d-flex align-items-center justify-content-center mx-auto mb-3">
+                    <i class="ri-close-circle-line text-lg opacity-10"></i>
+                </div>
+                <p class="text-sm text-secondary mb-1">Total Req Cancelados</p>
+                <h4 class="mb-2 font-weight-bold">{{ kpis.get('req_cancelados', 0) }}</h4>
+                <span class="text-xs text-secondary">Descartados</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100">
+            <div class="card-body text-center p-3 w-100">
+                <div class="icon icon-shape icon-lg bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mx-auto mb-3">
+                    <i class="ri-magic-line text-lg opacity-10"></i>
+                </div>
+                <p class="text-sm text-secondary mb-1">Req Limpios</p>
+                <h4 class="mb-2 font-weight-bold">{{ kpis.get('total_neto', 0) }}</h4>
+                <span class="text-xs text-secondary">Ingresados - Cancelados</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100">
+            <div class="card-body text-center p-3 w-100">
+                <div class="icon icon-shape icon-lg bg-success text-white text-center border-radius-sm d-flex align-items-center justify-content-center mx-auto mb-3">
+                    <i class="ri-checkbox-circle-line text-lg opacity-10"></i>
+                </div>
+                <p class="text-sm text-secondary mb-1">Total Req Procesados</p>
+                <h4 class="mb-2 font-weight-bold">{{ kpis.get('req_procesados', 0) }}</h4>
+                <span class="text-xs text-secondary">Completados</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100">
+            <div class="card-body text-center p-3 w-100">
+                <div class="icon icon-shape icon-lg bg-secondary text-white text-center border-radius-sm d-flex align-items-center justify-content-center mx-auto mb-3">
+                    <i class="ri-speed-line text-lg opacity-10"></i>
+                </div>
+                <p class="text-sm text-secondary mb-1">Eficiencia de Admisión</p>
+                <h4 class="mb-2 font-weight-bold">{{ kpis.get('eficiencia_operacional', 0) }}%</h4>
+                <span class="text-xs text-secondary">Ingresados vs Cancelados</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100">
+            <div class="card-body text-center p-3 w-100">
+                <div class="icon icon-shape icon-lg bg-primary text-white text-center border-radius-sm d-flex align-items-center justify-content-center mx-auto mb-3">
+                    <i class="ri-percent-line text-lg opacity-10"></i>
+                </div>
+                <p class="text-sm text-secondary mb-1">Eficiencia de Procesamiento</p>
+                <h4 class="mb-2 font-weight-bold">{{ kpis.get('eficiencia', 0) }}%</h4>
+                <span class="text-xs text-secondary">Procesados vs Neto</span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="accordion" id="accordionDetallesReq">
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingProcesados">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProcesados">
+            ✅ Requerimientos Procesados
+            {% if kpis.get('req_procesados', 0) > 0 %}
+              <span class="badge bg-success ms-3">{{ kpis.get('req_procesados', 0) }}</span>
+            {% endif %}
+          </button>
+        </h2>
+        <div id="collapseProcesados" class="accordion-collapse collapse" data-bs-parent="#accordionDetallesReq">
+          <div class="accordion-body">
+            {% if df_procesados_html %}
+              {{ df_procesados_html | safe }}
+            {% else %}
+              <p class="text-muted text-center">No hay requerimientos procesados en esta sesión.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingEnProceso">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEnProceso">
+            ⏳ Requerimientos en Proceso
+            {% if kpis.get('req_en_proceso', 0) > 0 %}
+              <span class="badge bg-warning ms-3">{{ kpis.get('req_en_proceso', 0) }}</span>
+            {% endif %}
+          </button>
+        </h2>
+        <div id="collapseEnProceso" class="accordion-collapse collapse" data-bs-parent="#accordionDetallesReq">
+          <div class="accordion-body">
+            {% if df_en_proceso_html %}
+              {{ df_en_proceso_html | safe }}
+            {% else %}
+              <p class="text-muted text-center">¡Excelente! No hay requerimientos en proceso.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      {% if analisis_financiero and analisis_financiero.unmatched_ocs %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingUnmatched">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUnmatched">
+            🔍 OCs sin Match en Experto Histórico
+            <span class="badge bg-danger ms-3">{{ analisis_financiero.unmatched_ocs|length }}</span>
+          </button>
+        </h2>
+        <div id="collapseUnmatched" class="accordion-collapse collapse" data-bs-parent="#accordionDetallesReq">
+          <div class="accordion-body">
+            <p>Las siguientes órdenes de compra del archivo "ListadoResultadoOC" no encontraron una correspondencia en el "Experto Histórico".</p>
+            <ul class="list-group">
+              {% for oc in analisis_financiero.unmatched_ocs %}
+              <li class="list-group-item">{{ oc }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+<div class="row mt-4">
+  <div class="col-lg-6 mb-4">
+    <div class="card border shadow-xs h-100">
+      <div class="card-header border-bottom pb-0">
+        <h6 class="mb-0">📋 Distribución por Tipo de Compra</h6>
+        <p class="text-sm mb-2">Análisis detallado de los datos procesados en la última sesión</p>
+      </div>
+      <div class="card-body px-0 py-0">
+        <div class="table-responsive p-0">
+          
+          <table class="table align-items-center mb-0 table-compact" id="tabla-distribucion-tipo">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tipo de Compra</th>
+                <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Cantidad</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Detalle</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in tabla_distribucion %}
+              <tr>
+                <td>
+                  <div class="d-flex px-2">
+                    <div class="d-flex flex-column justify-content-center">
+                      <h6 class="mb-0">{{ item.tipo_compra }}</h6>
+                    </div>
+                  </div>
+                </td>
+                <td class="align-middle text-center">
+                  <span class="text-secondary font-weight-bold">{{ item.cantidad }}</span>
+                </td>
+                <td class="align-middle">
+                  <span class="text-secondary text-xs font-weight-bold">{{ item.subtipo }}</span>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="3" class="text-center text-muted py-4">No hay datos de distribución para mostrar.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if graficos.get('distribucion_tipos') %}
+  <div class="col-lg-6 mb-4">
+    <div class="card border shadow-xs h-100">
+      <div class="card-header border-bottom pb-0">
+        <h6 class="mb-0">Distribución de Procesados</h6>
+        <p class="text-sm mb-0">Requerimientos que finalizaron con una OC</p>
+      </div>
+      <div class="card-body p-3 d-flex align-items-center">
+        {{ graficos.distribucion_tipos | safe }}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if graficos.get('top_unidades') %}
+<div class="row mt-2">
+  <div class="col-12 mb-4">
+    <div class="card border shadow-xs h-100">
+      <div class="card-header border-bottom pb-0">
+        <h6 class="mb-0">Top 10 Unidades Solicitantes</h6>
+        <p class="text-sm mb-0">Unidades con más requerimientos procesados</p>
+      </div>
+      <div class="card-body p-3">
+        {{ graficos.top_unidades | safe }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card border shadow-xs">
+      <div class="card-header border-bottom pb-0">
+        <div class="d-sm-flex align-items-center">
+          <div>
+            <h6 class="font-weight-semibold text-lg mb-0">💰 Análisis Financiero de Órdenes de Compra</h6>
+            <p class="text-sm mb-0">Carga los archivos para análisis monetario (pueden ser de cualquier mes/año)</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 py-0">
+        <div class="p-4">
+          <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="resultado_oc" class="form-label">📊 ListadoResultadoOC (Obligatorio)</label>
+                <input type="file" class="form-control" name="resultado_oc" accept=".xlsx,.xls,.csv" required>
+                <small class="text-muted">Archivo con todas las órdenes de compra emitidas</small>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="experto_historico" class="form-label">📁 Experto Histórico (Obligatorio)</label>
+                <input type="file" class="form-control" name="experto_historico" accept=".xlsx,.xls,.csv" required>
+                <small class="text-muted">Solicitud en Bruto con todos los requerimientos</small>
+              </div>
+            </div>
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary btn-sm mb-0">
+                <i class="fas fa-chart-line me-2"></i>Analizar Archivos
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if analisis_financiero %}
+<div class="row mt-4">
+  <div class="col-12 mb-4">
+    <div class="card border shadow-xs">
+      <div class="card-header border-bottom pb-0">
+        <h6 class="font-weight-semibold text-lg mb-2">💵 Indicadores Financieros</h6>
+        <p class="text-sm text-secondary mb-0">Montos transados y efectividad de recepción</p>
+      </div>
+      <div class="card-body">
+        
+        <div class="row">
+          <div class="col-md-3 text-center mb-3">
+            <div class="p-4 border-radius-lg" style="background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%);">
+              <h6 class="text-white text-sm mb-1">Monto Total Transado</h6>
+              <h3 class="text-white font-weight-bold mb-0">{{ analisis_financiero.kpis_financieros.monto_total_bruto }}</h3>
+              <p class="text-white text-xs mb-0 opacity-8">Total (incl. canceladas)</p>
+            </div>
+          </div>
+          <div class="col-md-3 text-center mb-3">
+            <div class="p-4 border-radius-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+              <h6 class="text-white text-sm mb-1">Monto Total Válido</h6>
+              <h3 class="text-white font-weight-bold mb-0">{{ analisis_financiero.kpis_financieros.monto_total_valido }}</h3>
+              <p class="text-white text-xs mb-0 opacity-8">Volumen (excl. canceladas)</p>
+            </div>
+          </div>
+          <div class="col-md-3 text-center mb-3">
+            <div class="p-4 border-radius-lg" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+              <h6 class="text-white text-sm mb-1">Recepción Conforme</h6>
+              <h3 class="text-white font-weight-bold mb-0">{{ analisis_financiero.kpis_financieros.monto_conforme }}</h3>
+              <p class="text-white text-xs mb-0 opacity-8">Ingresos validados</p>
+            </div>
+          </div>
+          <div class="col-md-3 text-center mb-3">
+            <div class="p-4 border-radius-lg" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);">
+              <h6 class="text-white text-sm mb-1">Efectividad $</h6>
+              <h3 class="text-white font-weight-bold mb-0">{{ analisis_financiero.kpis_financieros.efectividad }}</h3>
+              <p class="text-white text-xs mb-0 opacity-8">Tasa de éxito</p>
+            </div>
+          </div>
+        </div>
+        </div>
+    </div>
+  </div>
+
+  {% if analisis_financiero.graficos %}
+  <div class="col-12 mb-4">
+    <div class="card border shadow-xs">
+      <div class="card-header border-bottom pb-0">
+        <h6 class="font-weight-semibold text-lg mb-2">📊 Análisis de Compras por Unidad y Tipo</h6>
+        <p class="text-sm text-secondary mb-0">Distribución de órdenes de compra por unidad y modalidad</p>
+      </div>
+      <div class="card-body">
+        {% if analisis_financiero.graficos.get('top_unidades_monto') %}
+        <div class="row">
+          <div class="col-12 mb-4 border-bottom pb-4">
+            <h6 class="text-sm font-weight-bold mb-3">💰 Top 5 Unidades por Monto Total</h6>
+            {{ analisis_financiero.graficos.top_unidades_monto | safe }}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="row mt-3">
+          {% if analisis_financiero.graficos.get('top_unidades_cantidad') %}
+          <div class="col-lg-6 mb-4">
+            <h6 class="text-sm font-weight-bold mb-3">📊 Top 5 Unidades por Cantidad de OCs</h6>
+            {{ analisis_financiero.graficos.top_unidades_cantidad | safe }}
+          </div>
+          {% endif %}
+          
+          {% if analisis_financiero.graficos.get('distribucion_monto_tipo') %}
+          <div class="col-lg-6 mb-4">
+            <h6 class="text-sm font-weight-bold mb-3">📈 Distribución del Monto por Tipo de Compra</h6>
+            {{ analisis_financiero.graficos.distribucion_monto_tipo | safe }}
+          </div>
+          {% endif %}
+        </div>
+
+        {% if analisis_financiero.tabla_resumen_unidades %}
+        <div class="row mt-4 pt-4 border-top">
+          <div class="col-12">
+            <h6 class="text-sm font-weight-bold mb-3">📋 Resumen Detallado por Unidad</h6>
+            <p class="text-sm text-secondary mb-3">Todas las unidades con sus métricas de compra</p>
+            <div class="table-responsive">
+              {{ analisis_financiero.tabla_resumen_unidades | safe }}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if analisis_financiero.tabla_estados %}
+  <div class="col-12 mb-4">
+    <div class="card border shadow-xs">
+      <div class="card-header border-bottom pb-0">
+        <h6 class="font-weight-semibold text-lg mb-2">📊 Distribución de OCs por Estado</h6>
+        <p class="text-sm text-secondary mb-0">Cantidad y monto de órdenes por estado</p>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-lg-5 mb-4">
+            <h6 class="text-sm font-weight-bold mb-3">Resumen por Estado</h6>
+            <div class="table-responsive">
+              {{ analisis_financiero.tabla_estados | safe }}
+            </div>
+          </div>
+
+          {% if analisis_financiero.grafico_estados %}
+          <div class="col-lg-7 mb-4">
+            <h6 class="text-sm font-weight-bold mb-3">Visualización de Estados</h6>
+            {{ analisis_financiero.grafico_estados | safe }}
+          </div>
+          {% endif %}
+        </div>
+
+        {% if analisis_financiero.estados_disponibles %}
+        <div class="row mt-4 pt-4 border-top">
+          <div class="col-12">
+            <h6 class="text-sm font-weight-bold mb-3">🔍 Filtrar por Estado de OC</h6>
+            <p class="text-sm text-secondary mb-3">Selecciona un estado para ver sus órdenes de compra:</p>
+
+            <form id="form-filtro-estado" method="POST" action="{{ url_for('filtrar_por_estado') }}">
+              <div class="row align-items-end">
+                <div class="col-md-8">
+                  <select class="form-select" name="estado_filtro" id="estado_filtro">
+                    <option value="">-</option>{% for estado in analisis_financiero.estados_disponibles %}
+                    <option value="{{ estado }}">{{ estado }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-filter me-2"></i>Filtrar
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <div id="resultados-filtro" class="mt-4">
+              </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card border shadow-xs">
+      <div class="card-body text-center p-5">
+        <i class="fas fa-chart-line fa-3x text-secondary mb-3"></i>
+        <h5 class="text-secondary">No hay datos disponibles</h5>
+        <p class="text-sm text-secondary mb-0">Carga archivos para ver los KPIs y análisis</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Script para manejar el filtro de estados con AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    const formFiltro = document.getElementById('form-filtro-estado');
+
+    if (formFiltro) {
+        formFiltro.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(formFiltro);
+            const resultadosDiv = document.getElementById('resultados-filtro');
+
+            // Mostrar loading
+            resultadosDiv.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div><p class="mt-2 text-secondary">Filtrando OCs...</p></div>';
+
+            // Hacer petición AJAX
+            fetch('{{ url_for("filtrar_por_estado") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(html => {
+                resultadosDiv.innerHTML = html;
+                // Scroll suave hacia los resultados
+                resultadosDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            })
+            .catch(error => {
+                resultadosDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error al filtrar: ' + error.message + '</div>';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

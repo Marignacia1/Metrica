@@ -1,0 +1,357 @@
+{% extends "layout.html" %}
+
+{% block title %}Gestión de Licitaciones Vigentes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>📋 Gestión de Licitaciones Vigentes</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddLicitacion">
+        + Agregar Licitación
+    </button>
+</div>
+
+<div id="alert-container"></div>
+
+
+<div class="accordion" id="accordionLicitaciones">
+    {% for licitacion in licitaciones %}
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-{{ licitacion.id }}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ licitacion.id }}">
+                <strong>{{ licitacion.id_licitacion }}</strong>: {{ licitacion.nombre_licitacion }} (Requirente: {{ licitacion.requirente }})
+            </button>
+        </h2>
+        <div id="collapse-{{ licitacion.id }}" class="accordion-collapse collapse" data-bs-parent="#accordionLicitaciones">
+            <div class="accordion-body">
+                <div class="mb-3 d-flex gap-2">
+                    <button class="btn btn-success btn-sm" onclick="showAddConvenioModal({{ licitacion.id }})"><i class="fas fa-plus"></i> Agregar Proveedor</button>
+                    <button class="btn btn-secondary btn-sm" onclick='showEditLicitacionModal({{ licitacion|tojson|safe }})'><i class="fas fa-edit"></i> Modificar Licitación</button>
+                    <a href="{{ url_for('generar_pdf_licitacion_ruta', licitacion_id=licitacion.id) }}" class="btn btn-danger btn-sm"><i class="fas fa-file-pdf"></i> Generar PDF Completo</a>
+                    <form id="form-delete-licitacion-{{ licitacion.id }}" action="{{ url_for('api_delete_licitacion', licitacion_id=licitacion.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta licitación y todos sus datos asociados?');">
+                        <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Eliminar Licitación</button>
+                    </form>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Información de la Licitación</h5>
+                        <div class="row">
+                            <div class="col-md-6"><p><strong>Estado:</strong> <span class="badge bg-success">{{ licitacion.estado_general or 'VIGENTE' }}</span></p></div>
+                            <div class="col-md-6"><p><strong>Decreto Adjudicación:</strong> {{ licitacion.decreto_adjudicacion or 'N/A' }}</p></div>
+                            <div class="col-md-6"><p><strong>Inspector Técnico:</strong> {{ licitacion.inspector_tecnico or 'N/A' }}</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5>Proveedores Adjudicados</h5>
+                {% for convenio in licitacion.convenios %}
+                <div class="card mb-3 border-primary">
+                    <div class="card-header bg-primary bg-gradient text-white">
+                        <h6 class="mb-0">{{ convenio.proveedor }} ({{ convenio.rut_proveedor }})</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-3"><div class="p-3 bg-light rounded text-center"><small class="text-muted d-block">Monto Adjudicado</small><h5 class="mb-0">${{ "{:,.0f}".format(convenio.monto_adjudicado|float if convenio.monto_adjudicado else 0) }}</h5></div></div>
+                            <div class="col-md-3"><div class="p-3 bg-light rounded text-center"><small class="text-muted d-block">Total Usado</small><h5 class="mb-0">${{ "{:,.0f}".format(convenio.total_ocs|float if convenio.total_ocs else 0) }}</h5></div></div>
+                            <div class="col-md-3"><div class="p-3 bg-light rounded text-center"><small class="text-muted d-block">Saldo Disponible</small><h5 class="mb-0">${{ "{:,.0f}".format((convenio.monto_adjudicado|float - convenio.total_ocs|float) if convenio.monto_adjudicado and convenio.total_ocs else (convenio.monto_adjudicado|float if convenio.monto_adjudicado else 0)) }}</h5></div></div>
+                            <div class="col-md-3"><div class="p-3 bg-light rounded text-center"><small class="text-muted d-block">Tiempo Restante</small><h5 class="mb-0">{{ convenio.tiempo_restante }}</h5></div></div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6"><strong>Fecha Inicio:</strong> {{ convenio.fecha_inicio or 'N/A' }}</div>
+                            <div class="col-md-6"><strong>Fecha Término:</strong> {{ convenio.fecha_termino or 'N/A' }}</div>
+                        </div>
+
+                        <div class="mt-3 d-flex gap-2">
+                            <button class="btn btn-info btn-sm" onclick="showAddOcModal({{ convenio.id }})"><i class="fas fa-plus"></i> Agregar OC</button>
+                            <button class="btn btn-secondary btn-sm" onclick='showEditConvenioModal({{ convenio|tojson|safe }})'><i class="fas fa-edit"></i> Modificar Proveedor</button>
+                            <form id="form-delete-convenio-{{ convenio.id }}" action="{{ url_for('api_delete_convenio', convenio_id=convenio.id) }}" method="POST" class="d-inline ms-auto" onsubmit="return confirm('¿Eliminar este convenio y sus OCs?');">
+                                <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-trash"></i> Eliminar Proveedor</button>
+                            </form>
+                        </div>
+                        
+                        <div class="border-top mt-3 pt-3">
+                            <a class="btn btn-link btn-sm p-0" data-bs-toggle="collapse" href="#detallesOcultos-{{ convenio.id }}">
+                                Ver/Ocultar Detalles y Tabla de OCs
+                            </a>
+                            <div class="collapse" id="detallesOcultos-{{ convenio.id }}">
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <table class="table table-sm">
+                                            <tr><td><strong>ID Mercado Público:</strong></td><td>{{ convenio.id_mercado_publico or 'N/A' }}</td></tr>
+                                            <tr><td><strong>Plazo (Meses):</strong></td><td>{{ convenio.meses or 'N/A' }}</td></tr>
+                                            <tr><td><strong>ID Gestión Contratos:</strong></td><td>{{ convenio.id_gestion_contratos or 'N/A' }}</td></tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table class="table table-sm">
+                                            <tr><td><strong>Tiene IPC:</strong></td><td>{{ convenio.tiene_ipc or 'N/A' }}</td></tr>
+                                            <tr><td><strong>Garantía:</strong></td><td>{{ convenio.garantia or 'N/A' }}</td></tr>
+                                            <tr><td><strong>Decreto Contrato:</strong></td><td>{{ convenio.decreto_aprueba_contrato or 'N/A' }}</td></tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <h6>Órdenes de Compra</h6>
+                                    <table class="table table-sm table-striped">
+                                        <thead><tr><th>Número OC</th><th>Monto</th><th>Fecha Emisión</th><th>Acciones</th></tr></thead>
+                                        <tbody>
+                                            {% for oc in convenio.ocs %}
+                                            <tr>
+                                                <td>{{ oc.numero_oc }}</td>
+                                                <td>${{ "{:,.0f}".format(oc.monto|float) }}</td>
+                                                <td>{{ oc.fecha_emision or 'N/A' }}</td>
+                                                <td class="d-flex gap-2">
+                                                    <button class="btn btn-secondary btn-sm" onclick='showEditOcModal({{ oc|tojson|safe }})'><i class="fas fa-edit"></i></button>
+                                                    <form id="form-delete-oc-{{ oc.id }}" action="{{ url_for('api_delete_oc', oc_id=oc.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta OC?');">
+                                                        <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            {% else %}
+                                            <tr><td colspan="4" class="text-center text-muted">Sin órdenes de compra</td></tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-info">No hay proveedores registrados para esta licitación.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">No hay licitaciones registradas.</div>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="modalAddLicitacion" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Nueva Licitación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formAddLicitacion" action="{{ url_for('api_add_licitacion') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3"><label>ID Licitación (Ej: 2332-1-LQ24)</label><input type="text" name="id_licitacion" class="form-control" required></div>
+                    <div class="mb-3"><label>Nombre Licitación</label><input type="text" name="nombre_licitacion" class="form-control" required></div>
+                    <div class="mb-3"><label>Requirente</label><input type="text" name="requirente" class="form-control" required></div>
+                    <div class="mb-3"><label>Inspector Técnico</label><input type="text" name="inspector_tecnico" class="form-control"></div>
+                    <div class="mb-3"><label>Decreto Adjudicación</label><input type="text" name="decreto_adjudicacion" class="form-control"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Licitación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditLicitacion" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modificar Licitación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditLicitacion" action="{{ url_for('api_update_licitacion') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="licitacion_id" id="edit-licitacion-id">
+                    <div class="mb-3"><label>ID Licitación</label><input type="text" name="id_licitacion" id="edit-id_licitacion" class="form-control" required></div>
+                    <div class="mb-3"><label>Nombre Licitación</label><input type="text" name="nombre_licitacion" id="edit-nombre_licitacion" class="form-control" required></div>
+                    <div class="mb-3"><label>Requirente</label><input type="text" name="requirente" id="edit-requirente" class="form-control" required></div>
+                    <div class="mb-3"><label>Inspector Técnico</label><input type="text" name="inspector_tecnico" id="edit-inspector_tecnico" class="form-control"></div>
+                    <div class="mb-3"><label>Decreto Adjudicación</label><input type="text" name="decreto_adjudicacion" id="edit-decreto_adjudicacion" class="form-control"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAddConvenio" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Proveedor a Licitación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formAddConvenio" action="{{ url_for('api_add_convenio') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="licitacion_id" id="form_convenio_licitacion_id">
+                    <h6 class="border-bottom pb-2 mb-3">Información del Proveedor</h6>
+                    <div class="row"><div class="col-md-6 mb-3"><label>Nombre Proveedor <span class="text-danger">*</span></label><input type="text" name="proveedor" class="form-control" required></div><div class="col-md-6 mb-3"><label>RUT Proveedor <span class="text-danger">*</span></label><input type="text" name="rut_proveedor" class="form-control" required></div></div>
+                    <h6 class="border-bottom pb-2 mb-3 mt-3">Datos del Convenio</h6>
+                    <div class="row"><div class="col-md-6 mb-3"><label>Monto Adjudicado <span class="text-danger">*</span></label><input type="number" name="monto_adjudicado" class="form-control" required></div><div class="col-md-6 mb-3"><label>Plazo (Meses)</label><input type="number" name="meses" class="form-control"></div></div>
+                    <div class="row"><div class="col-md-6 mb-3"><label>Fecha Inicio</label><input type="date" name="fecha_inicio" class="form-control"></div><div class="col-md-6 mb-3"><label>Fecha Término</label><input type="date" name="fecha_termino" class="form-control"></div></div>
+                    <h6 class="border-bottom pb-2 mb-3 mt-3">Información Adicional</h6>
+                    <div class="row"><div class="col-md-6 mb-3"><label>ID Gestión Contratos</label><input type="text" name="id_gestion_contratos" class="form-control"></div><div class="col-md-6 mb-3"><label>ID Mercado Público</label><input type="text" name="id_mercado_publico" class="form-control"></div></div>
+                    <div class="row"><div class="col-md-4 mb-3"><label>Tiene IPC</label><select name="tiene_ipc" class="form-select"><option value="">Seleccionar</option><option value="Sí">Sí</option><option value="No">No</option></select></div><div class="col-md-4 mb-3"><label>Garantía</label><input type="text" name="garantia" class="form-control"></div><div class="col-md-4 mb-3"><label>Decreto Contrato</label><input type="text" name="decreto_aprueba_contrato" class="form-control"></div></div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar Proveedor</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditConvenio" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Modificar Proveedor</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <form id="formEditConvenio" action="{{ url_for('api_update_convenio') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="convenio_id" id="edit-convenio-id">
+                    <h6 class="border-bottom pb-2 mb-3">Información del Proveedor</h6>
+                    <div class="row"><div class="col-md-6 mb-3"><label>Nombre Proveedor</label><input type="text" name="proveedor" id="edit-proveedor" class="form-control"></div><div class="col-md-6 mb-3"><label>RUT Proveedor</label><input type="text" name="rut_proveedor" id="edit-rut" class="form-control"></div></div>
+                    <h6 class="border-bottom pb-2 mb-3 mt-3">Datos del Convenio</h6>
+                    <div class="row"><div class="col-md-6 mb-3"><label>Monto Adjudicado</label><input type="number" step="0.01" name="monto_adjudicado" id="edit-monto" class="form-control"></div><div class="col-md-6 mb-3"><label>Plazo (Meses)</label><input type="number" name="meses" id="edit-meses" class="form-control"></div></div>
+                    <div class="row"><div class="col-md-6 mb-3"><label>Fecha Inicio</label><input type="date" name="fecha_inicio" id="edit-fecha-inicio" class="form-control"></div><div class="col-md-6 mb-3"><label>Fecha Término</label><input type="date" name="fecha_termino" id="edit-fecha-termino" class="form-control"></div></div>
+                    <h6 class="border-bottom pb-2 mb-3 mt-3">Información Adicional</h6>
+                    <div class="row"><div class="col-md-6 mb-3"><label>ID Gestión Contratos</label><input type="text" name="id_gestion_contratos" id="edit-id-gestion" class="form-control"></div><div class="col-md-6 mb-3"><label>ID Mercado Público</label><input type="text" name="id_mercado_publico" id="edit-id-mp" class="form-control"></div></div>
+                    <div class="row"><div class="col-md-4 mb-3"><label>Tiene IPC</label><select name="tiene_ipc" id="edit-ipc" class="form-select"><option value="">Seleccionar</option><option value="Sí">Sí</option><option value="No">No</option></select></div><div class="col-md-4 mb-3"><label>Garantía</label><input type="text" name="garantia" id="edit-garantia" class="form-control"></div><div class="col-md-4 mb-3"><label>Decreto Contrato</label><input type="text" name="decreto_aprueba_contrato" id="edit-decreto" class="form-control"></div></div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar Cambios</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAddOc" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Agregar Orden de Compra</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <form id="formAddOc" action="{{ url_for('api_add_oc') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="convenio_id" id="form_oc_convenio_id">
+                    <div class="mb-3"><label>Número OC</label><input type="text" name="numero_oc" class="form-control" required></div>
+                    <div class="mb-3"><label>Monto</label><input type="number" step="0.01" name="monto" class="form-control" required></div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar OC</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditOc" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Modificar Orden de Compra</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <form id="formEditOc" action="{{ url_for('api_update_oc') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="oc_id" id="edit-oc-id">
+                    <div class="mb-3"><label>Número OC</label><input type="text" name="numero_oc" id="edit-numero-oc" class="form-control" required></div>
+                    <div class="mb-3"><label>Monto</label><input type="number" step="0.01" name="monto" id="edit-monto-oc" class="form-control" required></div>
+                    <div class="mb-3"><label>Fecha Emisión</label><input type="date" name="fecha_emision" id="edit-fecha-emision-oc" class="form-control"></div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar Cambios</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- Inicialización de todos los modales ---
+        const modalAddLicitacion = new bootstrap.Modal(document.getElementById('modalAddLicitacion'));
+        const modalEditLicitacion = new bootstrap.Modal(document.getElementById('modalEditLicitacion'));
+        const modalAddConvenio = new bootstrap.Modal(document.getElementById('modalAddConvenio'));
+        const modalEditConvenio = new bootstrap.Modal(document.getElementById('modalEditConvenio'));
+        const modalAddOc = new bootstrap.Modal(document.getElementById('modalAddOc'));
+        const modalEditOc = new bootstrap.Modal(document.getElementById('modalEditOc'));
+
+        // --- Funciones para ABRIR modales ---
+        window.showAddConvenioModal = function(licitacionId) {
+            document.getElementById('form_convenio_licitacion_id').value = licitacionId;
+            modalAddConvenio.show();
+        }
+
+        window.showAddOcModal = function(convenioId) {
+            document.getElementById('form_oc_convenio_id').value = convenioId;
+            modalAddOc.show();
+        }
+
+        window.showEditLicitacionModal = function(licitacion) {
+            document.getElementById('edit-licitacion-id').value = licitacion.id;
+            document.getElementById('edit-id_licitacion').value = licitacion.id_licitacion || '';
+            document.getElementById('edit-nombre_licitacion').value = licitacion.nombre_licitacion || '';
+            document.getElementById('edit-requirente').value = licitacion.requirente || '';
+            document.getElementById('edit-inspector_tecnico').value = licitacion.inspector_tecnico || '';
+            document.getElementById('edit-decreto_adjudicacion').value = licitacion.decreto_adjudicacion || '';
+            modalEditLicitacion.show();
+        }
+
+        window.showEditConvenioModal = function(convenio) {
+            document.getElementById('edit-convenio-id').value = convenio.id;
+            document.getElementById('edit-proveedor').value = convenio.proveedor || '';
+            document.getElementById('edit-rut').value = convenio.rut_proveedor || '';
+            document.getElementById('edit-monto').value = convenio.monto_adjudicado || '';
+            document.getElementById('edit-meses').value = convenio.meses || '';
+            document.getElementById('edit-fecha-inicio').value = convenio.fecha_inicio || '';
+            document.getElementById('edit-fecha-termino').value = convenio.fecha_termino || '';
+            document.getElementById('edit-id-gestion').value = convenio.id_gestion_contratos || '';
+            document.getElementById('edit-id-mp').value = convenio.id_mercado_publico || '';
+            document.getElementById('edit-ipc').value = convenio.tiene_ipc || '';
+            document.getElementById('edit-garantia').value = convenio.garantia || '';
+            document.getElementById('edit-decreto').value = convenio.decreto_aprueba_contrato || '';
+            modalEditConvenio.show();
+        }
+
+        window.showEditOcModal = function(oc) {
+            document.getElementById('edit-oc-id').value = oc.id;
+            document.getElementById('edit-numero-oc').value = oc.numero_oc || '';
+            document.getElementById('edit-monto-oc').value = oc.monto || '';
+            let fecha = oc.fecha_emision ? oc.fecha_emision.split(' ')[0] : '';
+            document.getElementById('edit-fecha-emision-oc').value = fecha;
+            modalEditOc.show();
+        }
+
+        // --- Manejador de Formularios AJAX ---
+        const handleFormSubmit = function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                [modalAddLicitacion, modalEditLicitacion, modalAddConvenio, modalEditConvenio, modalAddOc, modalEditOc].forEach(modal => modal.hide());
+                
+                const alertContainer = document.getElementById('alert-container');
+                const alertType = data.success ? 'primary' : 'danger';
+                alertContainer.innerHTML = `<div class="alert alert-${alertType} text-white alert-dismissible fade show" role="alert">${data.message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+
+                if (data.success) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const alertContainer = document.getElementById('alert-container');
+                alertContainer.innerHTML = `<div class="alert alert-danger text-white">Error de conexión al procesar la solicitud.</div>`;
+            });
+        };
+
+        // Asignar el manejador a todos los formularios de la página
+        document.querySelectorAll('form[id^="form"]').forEach(form => {
+            form.addEventListener('submit', handleFormSubmit);
+        });
+    });
+</script>
+{% endblock %}
