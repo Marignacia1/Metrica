@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+
+{% block title %}Generador de Informes{% endblock %}
+{% block page_title %}Generador de Informes Profesionales{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 fade-in-up">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-gradient-primary p-4">
+                    <h5 class="text-white mb-0"><i class="fas fa-file-word me-2"></i>Configuración del Informe Mensual</h5>
+                    <p class="text-white text-xs opacity-8 mb-0">Complete los datos para generar el Acta de Entrega y el análisis del período.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form id="formInforme">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label font-weight-bold text-uppercase text-xs">Mes del Informe [cite: 143]</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="text" id="periodoInput" class="form-control" value="Noviembre" placeholder="Ej: Noviembre">
+                                </div>
+                                <small class="text-muted text-xxs">Este valor se replicará en los 7 puntos del Esquema de Equidad[cite: 114].</small>
+                            </div>
+                            
+                            <div class="col-md-12 mb-4">
+                                <label class="form-label font-weight-bold text-uppercase text-xs">Registro de Reuniones (L-M-V) [cite: 10]</label>
+                                <textarea id="reunionesInput" class="form-control" rows="3" placeholder="Ej: Miércoles 26 noviembre, Viernes 28 noviembre...">Miércoles 26 noviembre, Miércoles 5 noviembre, Miércoles 21 noviembre, Viernes 27 noviembre, Lunes 24 noviembre, Martes 19 noviembre, Lunes 17 noviembre, Viernes 14 noviembre, Lunes 3 noviembre, Lunes 10 noviembre, Miércoles 12 noviembre, Viernes 7 noviembre</textarea>
+                                <small class="text-muted text-xxs">Ingrese las fechas separadas por comas para el registro progresivo[cite: 10].</small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-signature text-primary me-2"></i>
+                                <span class="text-xs text-secondary">Firmas digitales incluidas: <b>Maria Vargas</b> y <b>Sra. Johana</b>[cite: 141].</span>
+                            </div>
+                            <button type="button" class="btn bg-gradient-primary mb-0 shadow-sm" onclick="descargarWord()">
+                                <i class="fas fa-file-download me-2"></i> Descargar Informe (.docx)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h6 class="font-weight-bold text-uppercase text-xs text-secondary mb-3">Resumen Licitaciones (Nov) [cite: 89]</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-sm">Gestionadas:</span>
+                        <span class="text-sm font-weight-bold">9 [cite: 91]</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-sm">Adjudicadas:</span>
+                        <span class="text-sm font-weight-bold">1 [cite: 95]</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-sm">Monto Total:</span>
+                        <span class="text-sm font-weight-bold text-success">$1.505.350 [cite: 96]</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h6 class="font-weight-bold text-uppercase text-xs text-secondary mb-3">Métrica WEB (Fase Beta) [cite: 104]</h6>
+                    <p class="text-xs text-muted">Avance de implementación del sistema automatizado[cite: 120].</p>
+                    <div class="progress-wrapper">
+                        <div class="progress-info d-flex justify-content-between">
+                            <div class="progress-percentage">
+                                <span class="text-xs font-weight-bold">80%</span>
+                            </div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-primary w-80" role="progressbar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function descargarWord() {
+    const periodo = document.getElementById('periodoInput').value;
+    const reuniones = document.getElementById('reunionesInput').value;
+    
+    if(!periodo || !reuniones) {
+        Swal.fire('Campos incompletos', 'Por favor complete todos los campos.', 'warning');
+        return;
+    }
+
+    Swal.fire({
+        title: 'Generando Informe...',
+        text: 'Preparando documento con firmas y gráficas.',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading() }
+    });
+
+    window.location.href = `/descargar_informe_word?periodo=${encodeURIComponent(periodo)}&reuniones=${encodeURIComponent(reuniones)}`;
+    
+    setTimeout(() => { Swal.close(); }, 3000);
+}
+</script>
+{% endblock %}

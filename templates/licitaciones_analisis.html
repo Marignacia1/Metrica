@@ -1,0 +1,345 @@
+{% extends "layout.html" %}
+
+{% block title %}Análisis de Licitaciones{% endblock %}
+{% block page_title %}Análisis Detallado: Licitaciones{% endblock %}
+
+{% block content %}
+
+<style>
+  .card-clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  .card-clickable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  
+  .cursor-pointer {
+    cursor: pointer;
+  }
+ 
+  .table td, .table th {
+    white-space: normal !important;
+    word-wrap: break-word;        
+    vertical-align: middle;       
+  }
+</style>
+
+{% if kpis_requerimientos and kpis_requerimientos.total_neto > 0 %}
+<div class="row">
+    <div class="col-12"><h6 class="font-weight-semibold mb-2">Indicadores de Requerimientos (Última Sesión)</h6></div>
+    <div class="col-xl-3 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100">
+            <div class="card-body p-3">
+                <div class="icon icon-shape icon-sm bg-info text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                    <i class="fas fa-file-alt text-lg opacity-10"></i>
+                </div>
+                <p class="text-sm text-secondary mb-1">Total Licitaciones (Reqs.)</p>
+                <h4 class="mb-0 font-weight-bold">{{ kpis_requerimientos.get('total_neto', 0) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100">
+            <div class="card-body p-3">
+                <div class="icon icon-shape icon-sm bg-success text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                    <i class="fas fa-check-circle text-lg opacity-10"></i>
+                </div>
+                <p class="text-sm text-secondary mb-1">Procesadas (con OC)</p>
+                <h4 class="mb-0 font-weight-bold text-success">{{ kpis_requerimientos.get('procesados', 0) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100">
+            <div class="card-body p-3">
+                <div class="icon icon-shape icon-sm bg-warning text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                    <i class="fas fa-clock text-lg opacity-10"></i>
+                </div>
+                <p class="text-sm text-secondary mb-1">En Proceso</p>
+                <h4 class="mb-0 font-weight-bold text-warning">{{ kpis_requerimientos.get('en_proceso', 0) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100">
+            <div class="card-body p-3">
+                <div class="icon icon-shape icon-sm bg-primary text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                    <i class="fas fa-percentage text-lg opacity-10"></i>
+                </div>
+                <p class="text-sm text-secondary mb-1">Eficiencia de Gestión</p>
+                <h4 class="mb-0 font-weight-bold text-primary">{{ kpis_requerimientos.get('eficiencia', '0%') }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+<hr class="horizontal dark">
+{% endif %}
+
+{% if session.usuario.permisos.cargar_archivos %}
+<div class="card mb-4">
+    <div class="card-header pb-0">
+        <h6>Análisis de Resultados de Licitaciones</h6>
+        <p class="text-sm">Sube los archivos para ver estados y montos.</p>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6"><label class="form-label">📊 ListadoResultadoLicitacion (Obligatorio)</label><input type="file" class="form-control" name="resultados_lic" required></div>
+                <div class="col-md-6"><label class="form-label">📋 Seguimiento Licitaciones (Obligatorio)</label><input type="file" class="form-control" name="seguimiento_lic" required></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm ms-auto mt-3">Analizar Archivos</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if analisis %}
+<div class="row mt-4">
+    <div class="col-12"><h6 class="font-weight-semibold mb-2">Indicadores Principales (Archivos Cargados)</h6></div>
+    <div class="col-xl-3 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100"><div class="card-body p-3"><p class="text-sm text-secondary mb-1">Total Licitaciones</p><h4 class="mb-0 font-weight-bold">{{ analisis.kpis.total_licitaciones }}</h4></div></div>
+    </div>
+    <div class="col-xl-3 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100"><div class="card-body p-3"><p class="text-sm text-secondary mb-1">Licitaciones Adjudicadas</p><h4 class="mb-0 font-weight-bold text-success">{{ analisis.kpis.total_adjudicadas }}</h4></div></div>
+    </div>
+    <div class="col-xl-6 col-sm-6 mb-4">
+        <div class="card border shadow-xs h-100"><div class="card-body p-3"><p class="text-sm text-secondary mb-1">Monto Adjudicado</p><h4 class="mb-0 font-weight-bold text-primary">{{ analisis.kpis.monto_adjudicado }}</h4></div></div>
+    </div>
+</div>
+
+<div class="row mt-2">
+    <div class="col-12"><h6 class="font-weight-semibold mb-2">Análisis por Tipo de Licitación</h6></div>
+    {% for tipo, data in analisis.kpis_por_tipo.items() %}
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card card-clickable" data-bs-toggle="modal" data-bs-target="#modal-tipo-{{ tipo }}">
+            <div class="card-header p-3 text-center">
+                <h6 class="mb-0">{{ tipo }}</h6>
+            </div>
+            <div class="card-body pt-0 p-3 text-center">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between"><strong>Total Licitaciones:</strong> <span>{{ data.total }}</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><strong>Adjudicadas:</strong> <span>{{ data.adjudicadas }}</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><strong>Monto Estimado:</strong> <span>{{ data.monto_estimado }}</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><strong>Monto Adjudicado:</strong> <span>{{ data.monto_adjudicado }}</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if analisis.df_en_proceso_html %}
+<div class="row mt-2">
+    <div class="col-12">
+        <div class="card shadow-xs mb-4">
+            <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-0">⏳ Licitaciones en Proceso (Pendientes)</h6>
+                    <p class="text-sm mb-0">Total detectado: <strong>{{ analisis.total_en_proceso }}</strong> procesos.</p>
+                </div>
+                <a href="{{ url_for('descargar_analisis_licitaciones') }}" class="btn btn-sm bg-gradient-success mb-0">
+                    <i class="fas fa-file-excel me-1"></i> Descargar Excel Pendientes
+                </a>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+                <div class="accordion" id="accordionEnProceso">
+                    <div class="accordion-item border-0">
+                        <h2 class="accordion-header" id="headingEnProceso">
+                            <button class="accordion-button px-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEnProceso">
+                                <span class="text-sm font-weight-bold">Ver listado detallado de pendientes</span>
+                            </button>
+                        </h2>
+                        <div id="collapseEnProceso" class="accordion-collapse collapse show" data-bs-parent="#accordionEnProceso">
+                            <div class="accordion-body text-sm opacity-8">
+                                <div class="table-responsive p-0">
+                                    {{ analisis.df_en_proceso_html | safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-lg-5 mb-lg-0 mb-4">
+        <div class="card h-100">
+            <div class="card-header pb-0"><h6>Distribución por Estado</h6></div>
+            <div class="card-body p-3">
+                {% if analisis.grafico_html %}
+                    <div class="chart-container" style="position: relative; height: 350px; width: 100%;">
+                        {{ analisis.grafico_html | safe }}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-pie fa-2x text-secondary mb-2"></i>
+                        <p class="text-sm text-secondary">No hay datos para graficar</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header pb-0"><h6>Responsable por Línea Licitada</h6></div>
+            <div class="card-body p-3">
+                {% if analisis.responsables_data %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-items-center mb-0" id="tabla-responsables">
+                      <thead>
+                        <tr>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Responsable</th>
+                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Cant. Licitaciones</th>
+                          <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Líneas Lic.</th>
+                          <th class="text-end text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Monto Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for row in analisis.responsables_data %}
+                        <tr class="cursor-pointer" data-bs-toggle="modal" data-bs-target="#modal-resp-{{ loop.index }}">
+                          <td>
+                            <div class="d-flex px-2 py-1">
+                              <div class="d-flex flex-column justify-content-center">
+                                <h6 class="mb-0 text-sm">{{ row.responsable }}</h6>
+                              </div>
+                            </div>
+                          </td>
+                          <td class="align-middle text-center text-sm">
+                            <span class="text-xs font-weight-bold">{{ row.Cantidad_Licitaciones }}</span>
+                          </td>
+                          <td class="align-middle text-center text-sm">
+                            <span class="text-xs font-weight-bold">{{ row.Lineas_Licitadas }}</span>
+                          </td>
+                          <td class="align-middle text-end text-sm">
+                            <span class="text-xs font-weight-bold">{{ row.Monto_Total_Fmt }}</span>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="bg-light">
+                          <td><strong>{{ analisis.responsables_total.Responsable }}</strong></td>
+                          <td class="text-center"><strong>{{ analisis.responsables_total.Cantidad_Licitaciones }}</strong></td>
+                          <td class="text-center"><strong>{{ analisis.responsables_total.Lineas_Licitadas }}</strong></td>
+                          <td class="text-end"><strong>{{ analisis.responsables_total.Monto_Total_Fmt }}</strong></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No se pudo generar el resumen por responsable.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card border shadow-xs">
+      <div class="card-body text-center p-5">
+        <i class="fas fa-chart-bar fa-3x text-secondary mb-3"></i>
+        <h5 class="text-secondary">No hay datos de análisis para mostrar</h5>
+        <p class="text-sm text-secondary mb-0">Carga los archivos de licitaciones para generar un nuevo análisis.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if analisis and analisis.detalle_por_tipo %}
+{% for tipo, licitaciones in analisis.detalle_por_tipo.items() %}
+<div class="modal fade" id="modal-tipo-{{ tipo }}" tabindex="-1" aria-labelledby="modalLabel-tipo-{{ tipo }}" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel-tipo-{{ tipo }}">Detalle Licitaciones - {{ tipo }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover table-sm">
+            <thead class="table-light">
+              <tr>
+                <th>ID Adquisición</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th class="text-end">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lic in licitaciones %}
+              <tr>
+                <td><small>{{ lic['ID Adquisición'] }}</small></td>
+                <td style="white-space: normal;">{{ lic['Nombre'] }}</td>
+                <td><span class="badge bg-secondary">{{ lic['Estado'] }}</span></td>
+                <td class="text-end"><strong>{{ lic['Monto'] }}</strong></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if analisis and analisis.detalle_por_responsable %}
+{% for responsable, detalles in analisis.detalle_por_responsable.items() %}
+<div class="modal fade" id="modal-resp-{{ loop.index }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalle Licitaciones: <strong>{{ responsable }}</strong></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover table-sm">
+            <thead class="table-light">
+              <tr>
+                <th>ID Adquisición</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th class="text-center">Líneas</th>
+                <th class="text-center">Ofertas</th>
+                <th class="text-end">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lic in detalles %}
+              <tr>
+                <td><small>{{ lic['ID'] }}</small></td>
+                <td style="white-space: normal;">{{ lic['Nombre'] }}</td>
+                <td><span class="badge bg-light text-dark border">{{ lic['Estado'] }}</span></td>
+                <td class="text-center">{{ lic['Líneas'] }}</td>
+                <td class="text-center">{{ lic['Ofertas'] }}</td>
+                <td class="text-end"><strong>{{ lic['Monto'] }}</strong></td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="text-center">No hay datos.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}

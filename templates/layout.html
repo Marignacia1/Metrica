@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Métrica Web{% endblock %} - Gestión de Compras</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        :root {
+            --sidebar-width: 220px;
+            --primary-color: #2563EB; /* Azul Corporativo */
+            --secondary-color: #64748B;
+            --bg-light: #F1F5F9;
+            --text-dark: #1E293B;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* --- SIDEBAR (Barra Lateral) --- */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: #1E293B;
+            color: white;
+            transition: all 0.3s;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        #sidebar .sidebar-header {
+            padding: 15px 20px;
+            background: #0F172A;
+            border-bottom: 1px solid #334155;
+        }
+
+        #sidebar ul.components { padding: 15px 0; }
+
+        #sidebar ul li a {
+            padding: 10px 20px;
+            font-size: 0.90rem;
+            display: block;
+            color: #CBD5E1;
+            text-decoration: none;
+            transition: 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        #sidebar ul li a:hover {
+            color: #fff;
+            background: #334155;
+        }
+
+        #sidebar ul li a.active {
+            background: var(--primary-color);
+            color: white;
+            border-left-color: #60A5FA;
+        }
+
+        #sidebar ul li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            padding: 15px 20px 5px 20px;
+            font-weight: 700;
+        }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        #content {
+            width: 100%;
+            padding-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 0.8rem 1.5rem;
+        }
+
+        footer {
+            margin-top: auto;
+            background: white;
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            border-top: 1px solid #E2E8F0;
+        }
+
+        /* Utilidades */
+        .text-primary { color: var(--primary-color) !important; }
+        .bg-primary { background-color: var(--primary-color) !important; }
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 992px) {
+            #sidebar { margin-left: calc(var(--sidebar-width) * -1); }
+            #content { padding-left: 0; }
+            #sidebar.active { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav id="sidebar">
+        <div class="sidebar-header d-flex align-items-center">
+            <i class="fas fa-chart-line fa-2x me-2 text-primary"></i>
+            <div>
+                <h5 class="mb-0 fw-bold text-white">Métrica Web</h5>
+                <small class="text-muted" style="font-size: 0.75rem;">Intranet Corporativa</small>
+            </div>
+        </div>
+
+        <ul class="list-unstyled components">
+            <li class="sidebar-section-title">Dep. de Licitaciones</li>
+            <li><a class="{% if request.endpoint == 'dashboard_general' %}active{% endif %}" href="{{ url_for('dashboard_general') }}"><i class="fas fa-home"></i> Dashboard General</a></li>
+            <li><a class="{% if request.endpoint == 'compras_agiles' %}active{% endif %}" href="{{ url_for('compras_agiles') }}"><i class="fas fa-bolt"></i> Compras Ágiles</a></li>
+            <li><a class="{% if request.endpoint == 'licitaciones_vigentes' %}active{% endif %}" href="{{ url_for('licitaciones_vigentes') }}"><i class="fas fa-gavel"></i> Licitaciones Vigentes</a></li>
+            <li><a class="{% if request.endpoint == 'licitaciones_analisis' %}active{% endif %}" href="{{ url_for('licitaciones_analisis') }}"><i class="fas fa-chart-pie"></i> Análisis Licitaciones</a></li>
+            
+           
+
+            <li class="sidebar-section-title">Administración y Perfil</li>
+            <li><a class="{% if request.endpoint == 'perfil' %}active{% endif %}" href="{{ url_for('perfil') }}"><i class="fas fa-user-circle"></i> Mi Perfil</a></li>
+            
+            {% if session.usuario and session.usuario.permisos and session.usuario.permisos.ver_menu_admin %}
+            <li><a class="{% if request.endpoint == 'configuracion' %}active{% endif %}" href="{{ url_for('configuracion') }}"><i class="fas fa-cog"></i> Configuración Sistema</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <div id="content">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid">
+                <button type="button" id="sidebarCollapse" class="btn btn-link text-dark d-lg-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <div class="ms-auto d-flex align-items-center">
+                    <div class="dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center text-dark fw-bold" 
+                           href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 35px; height: 35px;">
+                                {{ session.usuario.nombre_completo[0] if session.usuario else 'U' }}
+                            </div>
+                            <span class="d-none d-md-block">{{ session.usuario.nombre_completo if session.usuario else 'Usuario' }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                            <li><a class="dropdown-item py-2" href="{{ url_for('perfil') }}"><i class="fas fa-user-edit me-2 text-info"></i> Mi Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2 text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="p-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer>
+            <div class="container">
+                <p class="mb-0">© 2025 Métrica Web. Municipalidad de Puerto Montt.</p>
+                <small class="text-muted">Versión 1.2.0 | Departamento de Informática</small>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('sidebarCollapse');
+            if(btn) {
+                btn.addEventListener('click', function() {
+                    document.getElementById('sidebar').classList.toggle('active');
+                });
+            }
+
+            // Lógica de Cumpleaños
+            const fechaCumple = "{{ session.usuario.get('fecha_nacimiento', '') if session.usuario else '' }}";
+            if (fechaCumple) {
+                const hoy = new Date();
+                const cumple = new Date(fechaCumple + "T00:00:00");
+                
+                if (hoy.getMonth() === cumple.getMonth() && hoy.getDate() === cumple.getDate()) {
+                    const overlay = document.createElement('div');
+                    overlay.innerHTML = `
+                        <div id="cumpleOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; display:flex; justify-content:center; align-items:center; flex-direction:column; color:white; transition: opacity 1s; text-align:center; padding:20px;">
+                            <h1 style="font-size: 4rem; text-shadow: 0 0 20px #2563EB;">¡Feliz Cumpleaños! 🎂</h1>
+                            <h2 class="mt-3">{{ session.usuario.nombre_completo }}</h2>
+                            <p class="mt-4 fs-4 italic">"{{ session.usuario.get('frase_motivacional', '¡Que tengas un excelente día de trabajo!') }}"</p>
+                        </div>`;
+                    document.body.appendChild(overlay);
+
+                    const duration = 5 * 1000;
+                    const animationEnd = Date.now() + duration;
+                    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10001 };
+
+                    const interval = setInterval(function() {
+                        const timeLeft = animationEnd - Date.now();
+                        if (timeLeft <= 0) return clearInterval(interval);
+                        const particleCount = 50 * (timeLeft / duration);
+                        confetti({...defaults, particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 }});
+                    }, 250);
+
+                    setTimeout(() => {
+                        const el = document.getElementById('cumpleOverlay');
+                        if(el) {
+                            el.style.opacity = '0';
+                            setTimeout(() => el.remove(), 1000);
+                        }
+                    }, 5000);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

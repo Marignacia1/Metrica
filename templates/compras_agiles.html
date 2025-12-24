@@ -1,0 +1,327 @@
+{% extends "layout.html" %}
+
+{% block title %}Análisis de Compras Ágiles{% endblock %}
+{% block page_title %}Análisis Detallado: Compras Ágiles{% endblock %}
+{% if session.usuario.permisos.cargar_archivos %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow mb-4">
+                 <form method="POST" enctype="multipart/form-data">
+                     </form>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% block content %}
+<style>
+    /* =========================================
+       1. ESTILOS GENERALES (BASE)
+       ========================================= */
+    body {
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f8f9fa; /* Fondo general suave */
+        margin: 0;
+        padding: 20px;
+    }
+
+    /* Clase base para todas las tablas */
+    .table, #tabla-resumen-unidades {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed; /* CRUCIAL: Mantiene los anchos fijos que definimos abajo */
+        background-color: #fff;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05); /* Sombra suave estilo tarjeta */
+        border-radius: 8px; /* Bordes redondeados */
+        overflow: hidden; /* Para que la sombra no se corte */
+    }
+
+    /* =========================================
+       2. TABLA PRINCIPAL (DETALLE DE REQUERIMIENTOS)
+       (La tabla con 6 columnas: Req, Desc, Unidad, Comprador, Estado, Finan)
+       ========================================= */
+    
+    /* Encabezados */
+    .table thead th {
+        background-color: #f1f3f5;
+        color: #495057;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 12px 10px;
+        text-align: left;
+        border-bottom: 2px solid #dee2e6;
+        vertical-align: middle;
+    }
+
+    /* Celdas del cuerpo */
+    .table tbody td {
+        padding: 10px;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 0.85rem;
+        color: #344767;
+        vertical-align: top; /* Alineación arriba para orden visual */
+        white-space: normal;
+        overflow-wrap: break-word;
+    }
+
+    /* --- ANCHOS ESPECÍFICOS TABLA PRINCIPAL --- */
+    /* 1. Nº Req */
+    .table th:nth-child(1), .table td:nth-child(1) { width: 6%; text-align: center; font-weight: bold; }
+    /* 2. Descripción (Grande) */
+    .table th:nth-child(2), .table td:nth-child(2) { width: 38%; }
+    /* 3. Unidad Solicitante */
+    .table th:nth-child(3), .table td:nth-child(3) { width: 15%; }
+    /* 4. Comprador */
+    .table th:nth-child(4), .table td:nth-child(4) { width: 14%; }
+    /* 5. Estado Actual */
+    .table th:nth-child(5), .table td:nth-child(5) { width: 12%; }
+    /* 6. Financiamiento */
+    .table th:nth-child(6), .table td:nth-child(6) { width: 15%; }
+
+
+    /* =========================================
+       3. TABLA DE RESUMEN (POR UNIDAD)
+       (La tabla con 3 columnas: Unidad, Monto, Cantidad)
+       ========================================= */
+    
+    /* Encabezados específicos para Resumen */
+    #tabla-resumen-unidades thead th {
+        background-color: #f8f9fa;
+        color: #344767;
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 8px 15px; /* Padding reducido para cabecera más delgada */
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    /* Celdas específicas para Resumen */
+    #tabla-resumen-unidades tbody td {
+        padding: 8px 15px; /* Padding reducido: filas más delgadas */
+        border-bottom: 1px solid #e9ecef;
+        font-size: 0.85rem;
+        vertical-align: middle; /* Aquí centrado verticalmente se ve mejor */
+        color: #495057;
+    }
+
+    /* --- ANCHOS Y ALINEACIÓN TABLA RESUMEN --- */
+    
+    /* Col 1: UNIDAD (Mitad de la tabla) */
+    #tabla-resumen-unidades th:nth-child(1),
+    #tabla-resumen-unidades td:nth-child(1) {
+        width: 50%; 
+        text-align: left;
+        font-weight: 600;
+    }
+
+    /* Col 2: MONTO TOTAL (Derecha, numérico) */
+    #tabla-resumen-unidades th:nth-child(2),
+    #tabla-resumen-unidades td:nth-child(2) {
+        width: 30%;
+        text-align: right;
+        font-family: 'Consolas', 'Monaco', monospace; /* Opcional: Fuente monoespaciada para números */
+        font-weight: 600;
+        white-space: nowrap; /* Evita quiebre de línea en el precio */
+    }
+
+    /* Col 3: CANTIDAD OCS (Derecha) */
+    #tabla-resumen-unidades th:nth-child(3),
+    #tabla-resumen-unidades td:nth-child(3) {
+        width: 20%;
+        text-align: right;
+        padding-right: 25px; /* Un poco de aire extra a la derecha */
+    }
+
+    /* Estilo Hover para ambas tablas */
+    tbody tr:hover {
+        background-color: #f1f3f5;
+        cursor: default;
+    }
+</style>
+<div class="row">
+  <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+    <div class="card border shadow-xs h-100">
+      <div class="card-body p-3">
+        <div class="icon icon-shape icon-sm bg-info text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+          <i class="fas fa-bolt text-lg opacity-10"></i>
+        </div>
+        <p class="text-sm text-secondary mb-1">Total Compras Ágiles</p>
+        <h4 class="mb-0 font-weight-bold">{{ kpis_iniciales.get('total_neto', 0) }}</h4>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+    <div class="card border shadow-xs h-100">
+      <div class="card-body p-3">
+        <div class="icon icon-shape icon-sm bg-success text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+          <i class="fas fa-check-circle text-lg opacity-10"></i>
+        </div>
+        <p class="text-sm text-secondary mb-1">Procesados (con OC)</p>
+        <h4 class="mb-0 font-weight-bold text-success">{{ kpis_iniciales.get('procesados', 0) }}</h4>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+    <div class="card border shadow-xs h-100">
+      <div class="card-body p-3">
+        <div class="icon icon-shape icon-sm bg-warning text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+          <i class="fas fa-clock text-lg opacity-10"></i>
+        </div>
+        <p class="text-sm text-secondary mb-1">En Proceso</p>
+        <h4 class="mb-0 font-weight-bold text-warning">{{ kpis_iniciales.get('en_proceso', 0) }}</h4>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-sm-6">
+    <div class="card border shadow-xs h-100">
+      <div class="card-body p-3">
+        <div class="icon icon-shape icon-sm bg-primary text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+          <i class="fas fa-percentage text-lg opacity-10"></i>
+        </div>
+        <p class="text-sm text-secondary mb-1">Eficiencia de Gestión</p>
+        <h4 class="mb-0 font-weight-bold text-primary">{{ kpis_iniciales.get('eficiencia', '0%') }}</h4>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="accordion" id="accordionDetallesReq">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingProcesados">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProcesados">
+                        ✅ Requerimientos Procesados (Compra Ágil)
+                        {% if kpis_iniciales.get('procesados', 0) > 0 %}
+                        <span class="badge bg-success ms-3">{{ kpis_iniciales.get('procesados', 0) }}</span>
+                        {% endif %}
+                    </button>
+                </h2>
+                <div id="collapseProcesados" class="accordion-collapse collapse" data-bs-parent="#accordionDetallesReq">
+                    <div class="accordion-body">
+                        {% if df_procesados %}
+                        <div class="table-responsive">
+                            {{ df_procesados | safe }}
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">No hay requerimientos procesados de Compra Ágil en esta sesión.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingEnProceso">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEnProceso">
+                        ⏳ Requerimientos en Proceso (Compra Ágil)
+                        {% if kpis_iniciales.get('en_proceso', 0) > 0 %}
+                        <span class="badge bg-warning ms-3">{{ kpis_iniciales.get('en_proceso', 0) }}</span>
+                        {% endif %}
+                    </button>
+                </h2>
+                <div id="collapseEnProceso" class="accordion-collapse collapse" data-bs-parent="#accordionDetallesReq">
+                    <div class="accordion-body">
+                        {% if df_en_proceso %}
+                        <div class="table-responsive">
+                            {{ df_en_proceso | safe }}
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">¡Excelente! No hay requerimientos en proceso de Compra Ágil.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if session.usuario.permisos.cargar_archivos %}
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card border shadow-xs">
+      <div class="card-header border-bottom pb-0">
+        <h6 class="font-weight-semibold text-lg mb-0">💰 Análisis Financiero de Compras Ágiles</h6>
+        <p class="text-sm mb-0">Carga los archivos para análisis monetario (pueden ser de cualquier mes/año)</p>
+      </div>
+      <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+          <div class="row">
+            <div class="col-md-6 mb-3"><label class="form-label">📊 ListadoResultadoOC</label><input type="file" class="form-control" name="resultado_oc" required></div>
+            <div class="col-md-6 mb-3"><label class="form-label">📁 Experto Histórico</label><input type="file" class="form-control" name="experto_historico" required></div>
+          </div>
+          <div class="text-end"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-chart-line me-2"></i>Analizar</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% if analisis_financiero %}
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card border shadow-xs">
+      <div class="card-header border-bottom pb-0"><h6 class="font-weight-semibold text-lg mb-0">📈 Resultados del Análisis Financiero (Compra Ágil)</h6></div>
+      <div class="card-body">
+        
+        <div class="row">
+          <div class="col-md-3 text-center mb-3">
+            <div class="p-4 border-radius-lg" style="background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%);">
+              <h6 class="text-white text-sm mb-1">Monto Total Transado</h6>
+              <h3 class="text-white font-weight-bold mb-0">{{ analisis_financiero.kpis_financieros.monto_total_bruto }}</h3>
+              <p class="text-white text-xs mb-0 opacity-8">Total (incl. canceladas)</p>
+            </div>
+          </div>
+          <div class="col-md-3 text-center mb-3">
+            <div class="p-4 border-radius-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+              <h6 class="text-white text-sm mb-1">Monto Total Válido</h6>
+              <h3 class="text-white font-weight-bold mb-0">{{ analisis_financiero.kpis_financieros.monto_total_valido }}</h3>
+              <p class="text-white text-xs mb-0 opacity-8">Volumen (excl. canceladas)</p>
+            </div>
+          </div>
+          <div class="col-md-3 text-center mb-3">
+            <div class="p-4 border-radius-lg" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+              <h6 class="text-white text-sm mb-1">Recepción Conforme</h6>
+              <h3 class="text-white font-weight-bold mb-0">{{ analisis_financiero.kpis_financieros.monto_conforme }}</h3>
+              <p class="text-white text-xs mb-0 opacity-8">Ingresos validados</p>
+            </div>
+          </div>
+          <div class="col-md-3 text-center mb-3">
+            <div class="p-4 border-radius-lg" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);">
+              <h6 class="text-white text-sm mb-1">Efectividad $</h6>
+              <h3 class="text-white font-weight-bold mb-0">{{ analisis_financiero.kpis_financieros.efectividad }}</h3>
+              <p class="text-white text-xs mb-0 opacity-8">Tasa de éxito</p>
+            </div>
+          </div>
+        </div>
+        {% if analisis_financiero.grafico_monto_json %}
+        <div class="mt-4">
+          <h6 class="mb-3">📊 Top 5 Unidades por Monto Total (Compra Ágil)</h6>
+          {{ analisis_financiero.grafico_monto_json | safe }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if analisis_financiero.tabla_resumen_unidades %}
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card border shadow-xs">
+      <div class="card-header border-bottom pb-0">
+        <h6 class="font-weight-semibold text-lg mb-2">📋 Resumen Detallado por Unidad (Compra Ágil)</h6>
+        <p class="text-sm text-secondary mb-3">Métricas de compra ágil para todas las unidades solicitantes.</p>
+      </div>
+      <div class="card-body px-0 py-0">
+        <div class="table-responsive p-0">
+          {{ analisis_financiero.tabla_resumen_unidades | safe }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+{% endblock %}

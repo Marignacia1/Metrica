@@ -1,0 +1,23 @@
+{% if ocs_filtradas %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    Mostrando <strong>{{ total }}</strong> órdenes de compra
+    {% if estado and estado != 'Todos' %}
+    con estado: <strong>{{ estado }}</strong>
+    {% endif %}
+</div>
+
+<div class="table-responsive">
+    {{ ocs_filtradas | safe }}
+</div>
+{% elif mensaje %}
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ mensaje }}
+</div>
+{% else %}
+<div class="alert alert-secondary">
+    <i class="fas fa-search me-2"></i>
+    Selecciona un estado para ver las órdenes de compra
+</div>
+{% endif %}

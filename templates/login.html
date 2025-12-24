@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="apple-touch-icon" sizes="76x76" href="{{ url_for('static', filename='assets/img/apple-icon.png') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon.png') }}">
+  <title>
+    Iniciar Sesión - Metrica Web
+  </title>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Noto+Sans:300,400,500,600,700,800|PT+Mono:300,400,500,600,700" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='assets/css/nucleo-icons.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='assets/css/nucleo-svg.css') }}" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/349ee9c857.js" crossorigin="anonymous"></script>
+  <link href="{{ url_for('static', filename='assets/css/nucleo-svg.css') }}" rel="stylesheet" />
+  <link id="pagestyle" href="{{ url_for('static', filename='assets/css/corporate-ui-dashboard.css') }}" rel="stylesheet" />
+
+  <style>
+    /* Estilo principal para el fondo de la página */
+    .login-background {
+      background-image: url("{{ url_for('static', filename='assets/img/fondo.jpg') }}") !important;
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+      min-height: 100vh !important;
+    }
+
+    .login-card {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 450px; 
+      margin: auto; 
+      padding: 20px; 
+    }
+
+
+    .login-container {
+      position: relative;
+      z-index: 1;
+      max-width: 500px;
+      margin: auto;
+      transform: translateY(-20px);
+    }
+
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .logo-item {
+      text-align: center;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    .logo-item img {
+      max-height: 80px;
+      max-width: 180px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+      transition: transform 0.3s ease;
+    }
+
+    .logo-item img:hover {
+      transform: scale(1.05);
+    }
+
+    .logo-divider {
+      width: 2px;
+      height: 60px;
+      background: linear-gradient(to bottom, transparent, #3B82F6, transparent);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .welcome-text {
+      animation: fadeIn 1s ease-out;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .btn-login {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      padding: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-login:hover {
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+
+<body class="login-background">
+
+  <main class="main-content mt-0">
+    <section>
+      <div class="page-header min-vh-100">
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-xl-5 col-lg-6 col-md-8 d-flex flex-column mx-auto">
+              <div class="card login-card mt-8 login-container">
+                <div class="card-body p-5">
+
+                  <div class="logo-container">
+                    <div class="logo-item">
+                      <img src="{{ url_for('static', filename='assets/img/logo_metrica.png') }}" alt="Métrica Web">
+                    </div>
+                    <div class="logo-divider"></div>
+                    <div class="logo-item">
+                      <img src="{{ url_for('static', filename='assets/img/logo_municipalidad.png') }}" alt="Municipalidad">
+                    </div>
+                  </div>
+
+                  <div class="text-center mb-4">
+                    <h2 class="font-weight-black welcome-text display-6 mb-2">¡Bienvenido!</h2>
+                    <p class="text-secondary mb-0">Sistema de Gestión de KPIs de Compras</p>
+                    <p class="text-sm text-secondary">Ingresa tus credenciales para continuar</p>
+                  </div>
+
+                  {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                      {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} text-white alert-dismissible fade show" role="alert">
+                          <span class="alert-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                          <span class="alert-text">{{ message }}</span>
+                          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                      {% endfor %}
+                    {% endif %}
+                  {% endwith %}
+
+                  <form role="form" method="POST" action="{{ url_for('login') }}">
+                    <label class="form-label">Usuario</label>
+                    <div class="mb-3">
+                      <input type="text" name="username" class="form-control form-control-lg" placeholder="Ingresa tu usuario" required autofocus>
+                    </div>
+
+                    <label class="form-label">Contraseña</label>
+                    <div class="mb-4">
+                      <input type="password" name="password" class="form-control form-control-lg" placeholder="Ingresa tu contraseña" required>
+                    </div>
+
+                    <div class="text-center">
+                      <button type="submit" class="btn btn-login btn-lg w-100 text-white">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                      </button>
+                    </div>
+                  </form>
+
+                  <div class="text-center mt-3">
+                      <p class="text-sm">
+                          ¿Olvidaste tu contraseña? 
+                          <a href="{{ url_for('solicitar_recuperacion') }}" class="text-primary font-weight-bold">
+                              Recupérala aquí
+                          </a>
+                      </p>
+                  </div>
+                  <div class="text-center mt-4 pt-3 border-top">
+                    <p class="text-xs text-secondary mb-0">
+                      <i class="fas fa-shield-alt me-1"></i>
+                      Acceso seguro y protegido
+                    </p>
+                  </div>
+
+                </div>
+              </div>
+
+              <div class="text-center mt-4">
+                <p class="text-white text-sm">
+                  <i class="fas fa-copyright"></i> 2024-2025 Métrica Web | Sistema de Gestión Municipal
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='assets/js/core/popper.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/core/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/corporate-ui-dashboard.min.js') }}"></script>
+
+</body>
+</html>

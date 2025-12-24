@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-lg mb-4">
+                <div class="card-header pb-0 p-3 bg-white">
+                    <div class="d-flex align-items-center">
+                        <h5 class="mb-0">👤 Mi Perfil Profesional y Personal</h5>
+                    </div>
+                    <p class="text-sm">Completa tu información para que el sistema y el administrador puedan conocerte mejor.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form role="form" method="POST" action="{{ url_for('perfil') }}">
+                        
+                        <p class="text-uppercase text-xs font-weight-bolder text-primary mb-3">Información de Contacto</p>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Nombre Completo</label>
+                                <input type="text" class="form-control" name="nombre" value="{{ session.usuario.nombre_completo }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Correo Electrónico (Recuperación)</label>
+                                <input type="email" class="form-control" name="email" value="{{ session.usuario.email or '' }}" placeholder="ejemplo@correo.cl" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">Teléfono de Contacto</label>
+                                <input type="text" class="form-control" name="phone" value="{{ session.usuario.phone or '' }}" placeholder="+56 9 ...">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold">🎂 Fecha de Cumpleaños</label>
+                                <input type="date" class="form-control" name="fecha_nacimiento" value="{{ session.usuario.get('fecha_nacimiento', '') }}">
+                            </div>
+                        </div>
+
+                        <hr class="horizontal dark my-4">
+
+                        <p class="text-uppercase text-xs font-weight-bolder text-primary mb-3">Perfil y Trayectoria</p>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label font-weight-bold">Breve Biografía / Descripción</label>
+                                <textarea class="form-control" name="bio" rows="3" placeholder="Resume tu trayectoria o lo que te hace único en el departamento...">{{ session.usuario.get('bio', '') }}</textarea>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label font-weight-bold">Habilidades y Competencias (Hard & Soft Skills)</label>
+                                <input type="text" class="form-control" name="habilidades" placeholder="Ej: Mercado Público, Análisis Presupuestario, Liderazgo, Excel Avanzado" value="{{ session.usuario.get('habilidades', '') }}">
+                            </div>
+                        </div>
+
+                        <hr class="horizontal dark my-4">
+
+                        <p class="text-uppercase text-xs font-weight-bolder text-primary mb-3">Personalización y Seguridad</p>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label font-weight-bold">✨ Mi Frase Motivacional / Lema</label>
+                                <input type="text" class="form-control" name="frase_motivacional" placeholder="Escribe el lema que te guía día a día..." value="{{ session.usuario.get('frase_motivacional', '') }}">
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label font-weight-bold">🚨 Contacto de Emergencia</label>
+                                <input type="text" class="form-control" name="contacto_emergencia" placeholder="Nombre y Teléfono de alguien a quien contactar en caso de urgencia" value="{{ session.usuario.get('contacto_emergencia', '') }}">
+                            </div>
+                        </div>
+
+                        <div class="alert alert-light border mt-3 mb-0 py-2">
+                            <p class="text-xs text-secondary mb-0">
+                                <i class="fas fa-lock me-1 text-primary"></i> 
+                                <strong>Seguridad de Cuenta:</strong> Para modificar tu contraseña, por favor cierra sesión y utiliza la opción 
+                                <a href="{{ url_for('solicitar_recuperacion') }}" class="text-primary font-weight-bold">"Olvidé mi contraseña"</a> 
+                                para recibir un enlace de cambio seguro en tu email.
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn bg-gradient-primary mb-0 px-5">Guardar Mi Perfil</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

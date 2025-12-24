@@ -1,0 +1,75 @@
+{
+  "usuarios": {
+    "admin": {
+      "password_hash": "scrypt:32768:8:1$2H8j4ZHx73v4gYiO$6b682c05168b895c0b0bbf5149bb4132b772448dafe6d85f00b59e0a239d2d6f75a6fcc01ce71f3dee9e63aa15cf529f8d3a84af783fb1e9d3fa80ee12e4f382",
+      "rol": "operador",
+      "nombre_completo": "Admin",
+      "force_password_change": true,
+      "email": "nachavargas835@gmail.com"
+    },
+    "david": {
+      "password_hash": "scrypt:32768:8:1$AZQMw8uduYGCf8BI$94f8716d4b295aac76ab290090f85ec61f3c94e7e4c254b9121267ff055b73539c2015adbd2efff2bcf3c88bc9aafc5cb7efc1e6fd989bb078a0b9bf51631edd",
+      "rol": "operador",
+      "nombre_completo": "David",
+      "force_password_change": true,
+      "email": "david@desam.cl"
+    },
+    "lili": {
+      "password_hash": "scrypt:32768:8:1$AZQMw8uduYGCf8BI$94f8716d4b295aac76ab290090f85ec61f3c94e7e4c254b9121267ff055b73539c2015adbd2efff2bcf3c88bc9aafc5cb7efc1e6fd989bb078a0b9bf51631edd",
+      "rol": "operador",
+      "nombre_completo": "Lili",
+      "force_password_change": true,
+      "email": "lili@desam.cl"
+    },
+    "johana": {
+      "password_hash": "scrypt:32768:8:1$AZQMw8uduYGCf8BI$94f8716d4b295aac76ab290090f85ec61f3c94e7e4c254b9121267ff055b73539c2015adbd2efff2bcf3c88bc9aafc5cb7efc1e6fd989bb078a0b9bf51631edd",
+      "rol": "jefe",
+      "nombre_completo": "Johana",
+      "force_password_change": true,
+      "email": "johana.aguila@saludpm.cl"
+    },
+    "dalmiro": {
+      "password_hash": "scrypt:32768:8:1$AZQMw8uduYGCf8BI$94f8716d4b295aac76ab290090f85ec61f3c94e7e4c254b9121267ff055b73539c2015adbd2efff2bcf3c88bc9aafc5cb7efc1e6fd989bb078a0b9bf51631edd",
+      "rol": "jefe",
+      "nombre_completo": "Dalmiro",
+      "force_password_change": true,
+      "email": "dalmiro@desam.cl"
+    },
+    "deisy": {
+      "password_hash": "scrypt:32768:8:1$AZQMw8uduYGCf8BI$94f8716d4b295aac76ab290090f85ec61f3c94e7e4c254b9121267ff055b73539c2015adbd2efff2bcf3c88bc9aafc5cb7efc1e6fd989bb078a0b9bf51631edd",
+      "rol": "jefe",
+      "nombre_completo": "Deisy",
+      "force_password_change": true,
+      "email": "deisy.morales@saludpm.cl"
+    }
+  },
+  "roles_permisos": {
+    "operador": {
+      "ver_datos": true,
+      "modificar_analisis": true,
+      "cargar_archivos": true,
+      "generar_informes": true,
+      "ver_notificaciones": true,
+      "ver_menu_admin": true,
+      "descripcion": "Acceso completo al sistema"
+    },
+    "operador_limitado": {
+      "ver_datos": true,
+      "modificar_analisis": false,
+      "cargar_archivos": true,
+      "generar_informes": true,
+      "ver_notificaciones": true,
+      "ver_menu_admin": false,
+      "descripcion": "Puede ver datos y cargar archivos, pero no modificar datos sensibles"
+    },
+    "jefe": {
+      "ver_datos": true,
+      "modificar_analisis": false,
+      "cargar_archivos": false,
+      "generar_informes": true,
+      "ver_notificaciones": false,
+      "ver_menu_admin": false,
+      "descripcion": "Solo visualizaci\u00c3\u00b3n de dashboards y descarga de informes"
+    }
+  }
+}

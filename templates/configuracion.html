@@ -1,0 +1,158 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mt-4 mb-4 fw-bold">⚙️ Configuración del Sistema</h2>
+
+    <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
+        
+        {% if session.usuario.rol in ['admin', 'operador'] %}
+        <li class="nav-item">
+            <button class="nav-link active fw-bold" id="carga-tab" data-bs-toggle="tab" data-bs-target="#carga" type="button" role="tab">
+                📂 Carga de Datos
+            </button>
+        </li>
+        {% endif %}
+
+        {% if session.usuario.rol == 'admin' %}
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="usuarios-tab" data-bs-toggle="tab" data-bs-target="#usuarios" type="button" role="tab">
+                👥 Gestión de Perfiles
+            </button>
+        </li>
+        {% endif %}
+
+        {% if session.usuario.rol in ['admin', 'operador'] %}
+        <li class="nav-item">
+            <button class="nav-link text-danger fw-bold" id="sistema-tab" data-bs-toggle="tab" data-bs-target="#sistema" type="button" role="tab">
+                ⚠️ Sistema
+            </button>
+        </li>
+        {% endif %}
+    </ul>
+
+    <div class="tab-content p-4 bg-white shadow-sm border border-top-0 rounded-bottom" id="configTabsContent">
+        
+        {% if session.usuario.rol in ['admin', 'operador'] %}
+        <div class="tab-pane fade show active" id="carga" role="tabpanel">
+            <div class="alert alert-info py-2">
+                <i class="fas fa-info-circle me-2"></i>Sube los reportes para actualizar el análisis general.
+            </div>
+            <form action="{{ url_for('cargar_datos') }}" method="POST" enctype="multipart/form-data">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small font-weight-bold">Reporte Experto</label>
+                        <input class="form-control" type="file" name="experto" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small font-weight-bold">Reporte Cancelados</label>
+                        <input class="form-control" type="file" name="cancelados" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small font-weight-bold">Reporte Precompra</label>
+                        <input class="form-control" type="file" name="precompra">
+                    </div>
+                </div>
+                <button type="submit" class="btn bg-gradient-primary mt-4">Procesar Información</button>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if session.usuario.rol == 'admin' %}
+        <div class="tab-pane fade" id="usuarios" role="tabpanel">
+            <div class="row">
+                <div class="col-md-4 border-end">
+                    <h6 class="mb-3">➕ Crear Nuevo Perfil</h6>
+                    <form method="POST">
+                        <input type="hidden" name="action" value="create_user">
+                        <input type="text" name="new_username" class="form-control mb-2" placeholder="Usuario (ej: j.perez)" required>
+                        <input type="text" name="new_nombre" class="form-control mb-2" placeholder="Nombre Completo" required>
+                        <input type="email" name="new_email" class="form-control mb-2" placeholder="Email" required>
+                        <select name="new_rol" class="form-select mb-3">
+                            <option value="jefe">Jefe</option>
+                            <option value="operador">Operador</option>
+                            <option value="visualizador">Visualizador</option>
+                        </select>
+                        <button type="submit" class="btn btn-success w-100">Registrar Usuario</button>
+                    </form>
+                </div>
+
+                <div class="col-md-8 ps-md-4">
+                    <h6 class="mb-3">👥 Perfiles Existentes</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-xs">Nombre / Usuario</th>
+                                    <th class="text-xs">Rol</th>
+                                    <th class="text-xs text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in usuarios %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <h6 class="mb-0 text-sm">{{ u.nombre_completo }}</h6>
+                                            <p class="text-xs text-secondary mb-0">{{ u.username }}</p>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark text-xxs">{{ u.rol }}</span></td>
+                                    <td class="text-center">
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="action" value="reset_pass">
+                                            <input type="hidden" name="user_to_reset" value="{{ u.username }}">
+                                            <button type="submit" class="btn btn-link text-warning p-0 me-2" title="Resetear a Desam.2025">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                        </form>
+                                        <button class="btn btn-link text-danger p-0"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if session.usuario.rol in ['admin', 'operador'] %}
+        <div class="tab-pane fade" id="sistema" role="tabpanel">
+            <div class="card border border-danger">
+                <div class="card-body">
+                    <h5 class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Zona de Peligro</h5>
+                    <p class="text-sm">Al vaciar la base de datos se eliminarán todas las licitaciones manuales y el historial.</p>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalBorrar">
+                        Vaciar Toda la Base de Datos
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<div class="modal fade" id="modalBorrar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">¿Estás seguro?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Esta acción es irreversible.</p>
+            </div>
+            <div class="modal-footer">
+                <form method="POST">
+                    <input type="hidden" name="action" value="delete_db">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Sí, borrar todo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
