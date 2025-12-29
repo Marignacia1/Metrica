@@ -145,8 +145,6 @@
             <li><a class="{% if request.endpoint == 'licitaciones_vigentes' %}active{% endif %}" href="{{ url_for('licitaciones_vigentes') }}"><i class="fas fa-gavel"></i> Licitaciones Vigentes</a></li>
             <li><a class="{% if request.endpoint == 'licitaciones_analisis' %}active{% endif %}" href="{{ url_for('licitaciones_analisis') }}"><i class="fas fa-chart-pie"></i> Análisis Licitaciones</a></li>
             
-           
-
             <li class="sidebar-section-title">Administración y Perfil</li>
             <li><a class="{% if request.endpoint == 'perfil' %}active{% endif %}" href="{{ url_for('perfil') }}"><i class="fas fa-user-circle"></i> Mi Perfil</a></li>
             
@@ -170,7 +168,7 @@
                             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 35px; height: 35px;">
                                 {{ session.usuario.nombre_completo[0] if session.usuario else 'U' }}
                             </div>
-                            <span class="d-none d-md-block">{{ session.usuario.nombre_completo if session.usuario else 'Usuario' }}</span>
+                            <span class="d-none d-md-block">{{ session.usuario.nombre_completo if session.usuario else 'Invitado' }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                             <li><a class="dropdown-item py-2" href="{{ url_for('perfil') }}"><i class="fas fa-user-edit me-2 text-info"></i> Mi Perfil</a></li>
@@ -218,19 +216,25 @@
                 });
             }
 
-            // Lógica de Cumpleaños
+            // Lógica de Cumpleaños (Protegida contra sesión nula)
             const fechaCumple = "{{ session.usuario.get('fecha_nacimiento', '') if session.usuario else '' }}";
             if (fechaCumple) {
                 const hoy = new Date();
-                const cumple = new Date(fechaCumple + "T00:00:00");
+                // Ajuste simple para comparar solo día y mes
+                const hoyDia = hoy.getDate();
+                const hoyMes = hoy.getMonth();
                 
-                if (hoy.getMonth() === cumple.getMonth() && hoy.getDate() === cumple.getDate()) {
+                const cumple = new Date(fechaCumple + "T00:00:00");
+                const cumpleDia = cumple.getDate();
+                const cumpleMes = cumple.getMonth();
+                
+                if (hoyMes === cumpleMes && hoyDia === cumpleDia) {
                     const overlay = document.createElement('div');
                     overlay.innerHTML = `
                         <div id="cumpleOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; display:flex; justify-content:center; align-items:center; flex-direction:column; color:white; transition: opacity 1s; text-align:center; padding:20px;">
                             <h1 style="font-size: 4rem; text-shadow: 0 0 20px #2563EB;">¡Feliz Cumpleaños! 🎂</h1>
-                            <h2 class="mt-3">{{ session.usuario.nombre_completo }}</h2>
-                            <p class="mt-4 fs-4 italic">"{{ session.usuario.get('frase_motivacional', '¡Que tengas un excelente día de trabajo!') }}"</p>
+                            <h2 class="mt-3">{{ session.usuario.nombre_completo if session.usuario else '' }}</h2>
+                            <p class="mt-4 fs-4 italic">"{{ session.usuario.get('frase_motivacional', '¡Que tengas un excelente día de trabajo!') if session.usuario else '¡Felicidades!' }}"</p>
                         </div>`;
                     document.body.appendChild(overlay);
 
