@@ -29,7 +29,7 @@ class AuthManager:
             'jefe': {
                 'ver_menu_admin': False, # NO VE el menú de configuración
                 'cargar_archivos': False, 
-                'modificar_analisis': False, 
+                'modificar_analisis': True, 
                 'generar_informes': True,
                 'gestionar_usuarios': False # NO PUEDE ver perfiles
             }
