@@ -73,6 +73,19 @@ class ComprasProcessor:
                 tipo_financiamiento TEXT,
                 FOREIGN KEY (sesion_id) REFERENCES sesiones (id) ON DELETE CASCADE
             )''')
+        
+        # --- NUEVA TABLA PARA FINANCIERO (Si no existe) ---
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS oc_financiero (
+                id INTEGER PRIMARY KEY, sesion_id INTEGER, numero_oc TEXT, nombre_oc TEXT,
+                tipo_compra TEXT, estado_oc TEXT, unidad TEXT, nombre_proveedor TEXT,
+                rut_proveedor TEXT, fecha_creacion TEXT, fecha_envio TEXT,
+                monto_neto REAL, descuentos REAL, cargos REAL, iva REAL,
+                impuesto_especifico REAL, total_oc REAL, numero_req TEXT,
+                titulo_req TEXT, comprador TEXT, tipo_financiamiento TEXT,
+                FOREIGN KEY (sesion_id) REFERENCES sesiones (id) ON DELETE CASCADE
+            )''')
+
         conn.execute('''
             CREATE TABLE IF NOT EXISTS licitaciones_mercado_publico (
                 id INTEGER PRIMARY KEY,
@@ -155,12 +168,11 @@ class ComprasProcessor:
                     col_orden_compra = col
                     break
         
-       # --- AÑADIDO ---
+        # --- AÑADIDO ---
         patrones_financiamiento = ['financiamiento', 'fuente', 'aporte', 'gestion', 'gestión']
         col_financiamiento = None
         for col in df.columns:
             col_lower = col.lower().strip()
-            # Aquí verifica si ALGUNA de las palabras clave está en el nombre de tu columna
             if any(patron in col_lower for patron in patrones_financiamiento):
                 col_financiamiento = col
                 break
@@ -394,7 +406,8 @@ class ComprasProcessor:
                     'total_oc': ['Total OC'],
                     'numero_req': ['numero_req'],
                     'titulo_req': ['titulo'],
-                    'comprador': ['comprador']
+                    'comprador': ['comprador'],
+                    'tipo_financiamiento': ['tipo_financiamiento'] # <-- LÍNEA AGREGADA
                 }
 
                 columnas_renombrar = {}
@@ -635,4 +648,5 @@ class ComprasProcessor:
             return resultado
         except Exception as e:
             resultado['messages'].append({'text': f"❌ Error: {str(e)}", 'category': 'error'})
+
             return resultado
