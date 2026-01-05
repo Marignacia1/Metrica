@@ -14,6 +14,7 @@ from queue import Queue
 from flask_mail import Mail, Message
 import io
 from flask import send_file
+from licitaciones_manager import LicitacionesManager
 # --- Importaciones de Nuestros Módulos ---
 from auth import AuthManager
 from data_processor import ComprasProcessor, leer_archivo, obtener_datos_sesion
@@ -1849,4 +1850,5 @@ def last_update():
 # --- 9. EJECUCIÓN DE LA APLICACIÓN ---
 # ==============================================================================
 if __name__ == '__main__':
+
     app.run(debug=True, port=5001)
