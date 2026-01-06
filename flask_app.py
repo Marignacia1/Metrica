@@ -1,5 +1,3 @@
-# flask_app.py
-
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, jsonify, Response
 import os
 import json
@@ -14,7 +12,6 @@ from queue import Queue
 from flask_mail import Mail, Message
 import io
 from flask import send_file
-from licitaciones_manager import LicitacionesManager
 # --- Importaciones de Nuestros Módulos ---
 from auth import AuthManager
 from data_processor import ComprasProcessor, leer_archivo, obtener_datos_sesion
@@ -1103,7 +1100,6 @@ def cargar_datos():
     # Si alguien intenta entrar por GET (escribiendo /cargar en el navegador),
     # lo mandamos a configuración porque ya no existe la vista separada.
     return redirect(url_for('configuracion'))
-
 # ==============================================================================
 # --- 5. GESTIÓN DE LICITACIONES Y PDF ---
 # ==============================================================================
@@ -1127,18 +1123,16 @@ def generar_pdf_licitacion_ruta(licitacion_id):
     manager = LicitacionesManager()
     todas_las_licitaciones = manager.obtener_licitaciones_completas()
     
-    licitacion_encontrada = None
-    for lic in todas_las_licitaciones:
-        if lic['id'] == licitacion_id:
-            licitacion_encontrada = lic
-            break
+    licitacion_encontrada = next((lic for lic in todas_las_licitaciones if lic['id'] == licitacion_id), None)
 
     if not licitacion_encontrada:
         flash("No se encontró la licitación.", "danger")
         return redirect(url_for('licitaciones_vigentes'))
 
     try:
-        file_name = f"Ficha_{licitacion_encontrada['id_licitacion']}.pdf".replace('/', '_').replace(' ', '')
+        # Formatear nombre de archivo: Ficha_ID-LIC.pdf
+        id_clean = str(licitacion_encontrada['id_licitacion']).replace('/', '_').replace(' ', '')
+        file_name = f"Ficha_{id_clean}.pdf"
         pdf_folder = app.config['UPLOAD_FOLDER']
         pdf_path = os.path.join(pdf_folder, file_name)
         
@@ -1147,18 +1141,18 @@ def generar_pdf_licitacion_ruta(licitacion_id):
         if os.path.exists(pdf_path):
             return send_from_directory(directory=pdf_folder, path=file_name, as_attachment=True)
         else:
-            flash("Error al generar el archivo PDF.", "danger")
+            flash("Error al generar el archivo físico del PDF.", "danger")
     except Exception as e:
         flash(f"Ocurrió un error al crear el PDF: {e}", "danger")
-        import traceback
-        traceback.print_exc()
     
     return redirect(url_for('licitaciones_vigentes'))
 
 
-## ==============================================================================
-# --- 6. API ENDPOINTS ---
 # ==============================================================================
+# --- 6. API ENDPOINTS (CORREGIDOS PARA FUNCIONAMIENTO CON MODALES) ---
+# ==============================================================================
+
+# --- CRUD LICITACIONES ---
 
 @app.route('/api/licitacion', methods=['POST'])
 @login_required
@@ -1166,13 +1160,12 @@ def generar_pdf_licitacion_ruta(licitacion_id):
 def api_add_licitacion():
     manager = LicitacionesManager()
     success, message = manager.agregar_licitacion(
-        request.form['id_licitacion'], 
-        request.form['nombre_licitacion'], 
-        request.form['requirente'],
+        request.form.get('id_licitacion'), 
+        request.form.get('nombre_licitacion'), 
+        request.form.get('requirente'),
         inspector_tecnico=request.form.get('inspector_tecnico'),
         decreto_adjudicacion=request.form.get('decreto_adjudicacion')
     )
-    flash(message, 'success' if success else 'error')
     return jsonify({'success': success, 'message': message})
 
 @app.route('/api/licitacion/update', methods=['POST'])
@@ -1181,16 +1174,15 @@ def api_add_licitacion():
 def api_update_licitacion():
     manager = LicitacionesManager()
     licitacion_id = request.form.get('licitacion_id')
-    datos_actualizados = {
+    datos = {
         'id_licitacion': request.form.get('id_licitacion'),
         'nombre_licitacion': request.form.get('nombre_licitacion'),
         'requirente': request.form.get('requirente'),
         'inspector_tecnico': request.form.get('inspector_tecnico'),
         'decreto_adjudicacion': request.form.get('decreto_adjudicacion')
     }
-    datos_filtrados = {k: v for k, v in datos_actualizados.items() if v is not None}
+    datos_filtrados = {k: v for k, v in datos.items() if v is not None}
     success, message = manager.actualizar_licitacion(licitacion_id, **datos_filtrados)
-    flash(message, 'success' if success else 'error')
     return jsonify({'success': success, 'message': message})
 
 @app.route('/api/licitacion/delete/<int:licitacion_id>', methods=['POST'])
@@ -1199,26 +1191,33 @@ def api_update_licitacion():
 def api_delete_licitacion(licitacion_id):
     manager = LicitacionesManager()
     success, message = manager.eliminar_licitacion(licitacion_id)
-    flash(message, 'success' if success else 'error')
     return jsonify({'success': success, 'message': message})
+
+# --- CRUD CONVENIOS (PROVEEDORES) ---
 
 @app.route('/api/convenio', methods=['POST'])
 @login_required
 @permission_required('modificar_analisis')
 def api_add_convenio():
     manager = LicitacionesManager()
+    # Capturamos todos los campos del formulario del modal
     campos_adicionales = {
-        'fecha_inicio': request.form.get('fecha_inicio'), 'fecha_termino': request.form.get('fecha_termino'),
-        'meses': request.form.get('meses'), 'id_gestion_contratos': request.form.get('id_gestion_contratos'),
-        'tiene_ipc': request.form.get('tiene_ipc'), 'garantia': request.form.get('garantia'),
-        'decreto_aprueba_contrato': request.form.get('decreto_aprueba_contrato'), 'id_mercado_publico': request.form.get('id_mercado_publico'),
+        'fecha_inicio': request.form.get('fecha_inicio'),
+        'fecha_termino': request.form.get('fecha_termino'),
+        'meses': request.form.get('meses'),
+        'id_gestion_contratos': request.form.get('id_gestion_contratos'),
+        'tiene_ipc': request.form.get('tiene_ipc'),
+        'garantia': request.form.get('garantia'),
+        'decreto_aprueba_contrato': request.form.get('decreto_aprueba_contrato'),
+        'id_mercado_publico': request.form.get('id_mercado_publico'),
     }
     success, message = manager.agregar_convenio(
-        request.form['licitacion_id'], request.form['proveedor'],
-        request.form['rut_proveedor'], request.form['monto_adjudicado'],
+        request.form.get('licitacion_id'), 
+        request.form.get('proveedor'),
+        request.form.get('rut_proveedor'), 
+        request.form.get('monto_adjudicado'),
         **campos_adicionales
     )
-    flash(message, 'success' if success else 'error')
     return jsonify({'success': success, 'message': message})
 
 @app.route('/api/convenio/update', methods=['POST'])
@@ -1227,17 +1226,21 @@ def api_add_convenio():
 def api_update_convenio():
     manager = LicitacionesManager()
     convenio_id = request.form.get('convenio_id')
-    datos_actualizados = {
-        'proveedor': request.form.get('proveedor'), 'rut_proveedor': request.form.get('rut_proveedor'),
-        'monto_adjudicado': request.form.get('monto_adjudicado'), 'meses': request.form.get('meses'),
-        'fecha_inicio': request.form.get('fecha_inicio'), 'fecha_termino': request.form.get('fecha_termino'),
-        'id_gestion_contratos': request.form.get('id_gestion_contratos'), 'id_mercado_publico': request.form.get('id_mercado_publico'),
-        'tiene_ipc': request.form.get('tiene_ipc'), 'garantia': request.form.get('garantia'),
+    datos = {
+        'proveedor': request.form.get('proveedor'),
+        'rut_proveedor': request.form.get('rut_proveedor'),
+        'monto_adjudicado': request.form.get('monto_adjudicado'),
+        'meses': request.form.get('meses'),
+        'fecha_inicio': request.form.get('fecha_inicio'),
+        'fecha_termino': request.form.get('fecha_termino'),
+        'id_gestion_contratos': request.form.get('id_gestion_contratos'),
+        'id_mercado_publico': request.form.get('id_mercado_publico'),
+        'tiene_ipc': request.form.get('tiene_ipc'),
+        'garantia': request.form.get('garantia'),
         'decreto_aprueba_contrato': request.form.get('decreto_aprueba_contrato'),
     }
-    datos_filtrados = {k: v for k, v in datos_actualizados.items() if v is not None}
+    datos_filtrados = {k: v for k, v in datos.items() if v is not None}
     success, message = manager.actualizar_convenio(convenio_id, **datos_filtrados)
-    flash(message, 'success' if success else 'error')
     return jsonify({'success': success, 'message': message})
 
 @app.route('/api/convenio/delete/<int:convenio_id>', methods=['POST'])
@@ -1246,16 +1249,20 @@ def api_update_convenio():
 def api_delete_convenio(convenio_id):
     manager = LicitacionesManager()
     success, message = manager.eliminar_convenio(convenio_id)
-    flash(message, 'success' if success else 'error')
     return jsonify({'success': success, 'message': message})
+
+# --- CRUD ÓRDENES DE COMPRA (OC) ---
 
 @app.route('/api/oc', methods=['POST'])
 @login_required
 @permission_required('modificar_analisis')
 def api_add_oc():
     manager = LicitacionesManager()
-    success, message = manager.agregar_oc(request.form['convenio_id'], request.form['numero_oc'], request.form['monto'])
-    flash(message, 'success' if success else 'error')
+    success, message = manager.agregar_oc(
+        request.form.get('convenio_id'), 
+        request.form.get('numero_oc'), 
+        request.form.get('monto')
+    )
     return jsonify({'success': success, 'message': message})
 
 @app.route('/api/oc/update', methods=['POST'])
@@ -1264,14 +1271,13 @@ def api_add_oc():
 def api_update_oc():
     manager = LicitacionesManager()
     oc_id = request.form.get('oc_id')
-    datos_actualizados = {
+    datos = {
         'numero_oc': request.form.get('numero_oc'),
         'monto': request.form.get('monto'),
         'fecha_emision': request.form.get('fecha_emision'),
     }
-    datos_filtrados = {k: v for k, v in datos_actualizados.items() if v is not None and v != ''}
+    datos_filtrados = {k: v for k, v in datos.items() if v is not None and v != ''}
     success, message = manager.actualizar_oc(oc_id, **datos_filtrados)
-    flash(message, 'success' if success else 'error')
     return jsonify({'success': success, 'message': message})
 
 @app.route('/api/oc/delete/<int:oc_id>', methods=['POST'])
@@ -1280,7 +1286,6 @@ def api_update_oc():
 def api_delete_oc(oc_id):
     manager = LicitacionesManager()
     success, message = manager.eliminar_oc(oc_id)
-    flash(message, 'success' if success else 'error')
     return jsonify({'success': success, 'message': message})
 # ==============================================================================
 # --- 8. RUTAS DE CONFIGURACIÓN Y PLACEHOLDERS ---
@@ -1293,7 +1298,7 @@ def configuracion():
     if request.method == 'POST':
         action = request.form.get('action')
         
-        # 1. Cambiar Apariencia (Ahora incluye font_family)
+        # 1. Cambiar Apariencia (Ahora incluye font_family
         if action == 'update_appearance':
             theme = request.form.get('theme_mode') # 'light' o 'dark'
             color = request.form.get('primary_color')
@@ -1850,5 +1855,4 @@ def last_update():
 # --- 9. EJECUCIÓN DE LA APLICACIÓN ---
 # ==============================================================================
 if __name__ == '__main__':
-
     app.run(debug=True, port=5001)
